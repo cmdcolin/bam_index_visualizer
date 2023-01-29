@@ -3,6 +3,8 @@ import { max, min, sum } from './util'
 // @ts-ignore
 import zscore from 'math-z-score'
 
+const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+
 function drawRow({
   size,
   bins,
@@ -22,14 +24,16 @@ function drawRow({
   cb: (arg: number) => string
   ctx: CanvasRenderingContext2D
 }) {
-  const xunit = width / size
+  const xunit = (width - 10) / size
   const xmin = Math.max(1, xunit)
   ctx.strokeStyle = `rgb(0,0,0,0.6)`
   let lastDrawn = -Infinity
+  ctx.fillStyle = colors[row]
+  ctx.fillRect(0, yunit * row, 10, yunit)
   for (let i = 0; i < size; i++) {
     const px = Math.floor(xunit * i)
     if (px !== lastDrawn) {
-      ctx.strokeRect(xunit * i, yunit * row, xmin, yunit)
+      ctx.strokeRect(10 + xunit * i, yunit * row, xmin, yunit)
       lastDrawn = px
     }
   }
@@ -37,7 +41,7 @@ function drawRow({
     const chunks = bins[curr]
     if (chunks) {
       ctx.fillStyle = cb(sum(chunks.map((e: any) => e.fetchedSize())))
-      ctx.fillRect(xunit * i, yunit * row, xmin, yunit)
+      ctx.fillRect(10 + xunit * i, yunit * row, xmin, yunit)
     }
   }
 }
@@ -61,16 +65,19 @@ export default function Graph({
     if (!ctx) {
       return
     }
-    const width = canvas.getBoundingClientRect().width
-    const height = canvas.getBoundingClientRect().height
+    let width = canvas.getBoundingClientRect().width
+    let height = canvas.getBoundingClientRect().height
     canvas.width = width
     canvas.height = height
 
     const yunit = height / 6
-    ctx.clearRect(0, 0, width, height)
     ctx.resetTransform()
-    ctx.translate(1, 1)
+    ctx.clearRect(0, 0, width, height)
     ctx.strokeStyle = 'black'
+    width -= 2
+    height -= 2
+    ctx.strokeRect(1, 1, width, height)
+    ctx.translate(1, 1)
 
     const bins = bai.binIndex
     const obj = new zscore()

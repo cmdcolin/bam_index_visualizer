@@ -1,5 +1,5 @@
-import Chunk from "./chunk"
-import VirtualOffset from "./virtualOffset"
+import Chunk from './chunk'
+import VirtualOffset from './virtualOffset'
 
 export function sum(arr: number[]) {
   let sum = 0

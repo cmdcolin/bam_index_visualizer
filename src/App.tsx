@@ -3,51 +3,14 @@ import { BamFile } from '@gmod/bam'
 
 // locals
 import Graph from './Graph'
-import { optimizeChunks, reg2bins, sum } from './util'
-import Chunk from './chunk'
+import { sum } from './util'
 import FileLayout from './FileLayout'
 
-function DataViewer({ data, loc }: { data: any; loc: string }) {
+function DataViewer({ data }: { data: any }) {
   const { bai, binSizes, chrToIndex, indexToChr } = data
   const [val, setVal] = useState(indexToChr[0].refName)
   const [colorMode, setColorMode] = useState('zscore')
-  const ba = bai.indices[chrToIndex[val]]
 
-  const p = loc.split(':')
-  const [s, e] = p[1]?.split('-') || []
-  let chunks = [] as Chunk[]
-  if (s !== undefined && e !== undefined) {
-    const sp = +s
-    const ep = +e
-    const bins = reg2bins(sp, ep)
-    for (const [start, end] of bins) {
-      for (let bin = start; bin <= end; bin++) {
-        if (ba.binIndex[bin]) {
-          const binChunks = ba.binIndex[bin]
-          for (let c = 0; c < binChunks.length; ++c) {
-            chunks.push(new Chunk(binChunks[c].minv, binChunks[c].maxv, bin))
-          }
-        }
-      }
-    }
-
-    // Use the linear index to find minimum file position of chunks that could
-    // contain alignments in the region
-    const nintv = ba.linearIndex.length
-    let lowest = null
-    const minLin = Math.min(sp >> 14, nintv - 1)
-    const maxLin = Math.min(ep >> 14, nintv - 1)
-    for (let i = minLin; i <= maxLin; ++i) {
-      const vp = ba.linearIndex[i]
-      if (vp) {
-        if (!lowest || vp.compareTo(lowest) < 0) {
-          lowest = vp
-        }
-      }
-    }
-
-    chunks = optimizeChunks(chunks, lowest)
-  }
   return (
     <div>
       <label htmlFor="chr">Chromosome:</label>
@@ -79,18 +42,26 @@ function DataViewer({ data, loc }: { data: any; loc: string }) {
         colorMode={colorMode}
       />
 
-      {chunks.length ? <FileLayout chunks={chunks} /> : null}
+      <FileLayout data={data} val={val} />
     </div>
   )
 }
 
-const base =
+const nanopore =
   'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/ultra-long-ont_hs37d5_phased.bam'
 
+const pacbio =
+  'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/reads_lr_skbr3.fa_ngmlr-0.2.3_mapped.bam'
+
+const illumina =
+  'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/HG002.hs37d5.2x250.bam'
+
+const pacbio2 =
+  'https://jbrowse.org/genomes/hg19/pacbio/m64011_181218_235052.8M.HG002.hs37d5.11kb.bam'
+
 function App() {
-  const [loc, setLoc] = useState('')
-  const [bamUrl, setBamUrl] = useState(base)
-  const [baiUrl, setBaiUrl] = useState(base + '.bai')
+  const [bamUrl, setBamUrl] = useState(illumina)
+  const [baiUrl, setBaiUrl] = useState(illumina + '.bai')
   const [data, setData] = useState<any>()
   const [error, setError] = useState<unknown>()
   useEffect(() => {
@@ -123,32 +94,66 @@ function App() {
     <div className="App">
       <div>
         <h2>BAM index visualizer</h2>
-        <div>
-          <label htmlFor="url">BAM URL: </label>
-          <input
-            id="bam"
-            type="text"
-            value={bamUrl}
-            onChange={event => setBamUrl(event.target.value)}
-          />
-        </div>
-        <div>
-          <label htmlFor="url">BAI URL: </label>
-          <input
-            id="bai"
-            type="text"
-            value={baiUrl}
-            onChange={event => setBaiUrl(event.target.value)}
-          />
-        </div>
-        <div>
-          <label htmlFor="url">Locstring: </label>
-          <input
-            id="locstring"
-            type="text"
-            value={loc}
-            onChange={event => setLoc(event.target.value)}
-          />
+        <div style={{ display: 'flex' }}>
+          <div style={{ margin: 20 }}>
+            <div>
+              <label htmlFor="url">BAM URL: </label>
+              <input
+                id="bam"
+                type="text"
+                value={bamUrl}
+                onChange={event => setBamUrl(event.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="url">BAI URL: </label>
+              <input
+                id="bai"
+                type="text"
+                value={baiUrl}
+                onChange={event => setBaiUrl(event.target.value)}
+              />
+            </div>
+          </div>
+          <div style={{ margin: 20 }}>
+            <div>Example files:</div>
+            <button
+              onClick={() => {
+                setBamUrl(nanopore)
+                setBaiUrl(nanopore + '.bai')
+                setData(undefined)
+              }}
+            >
+              Nanopore ultralong (60Mb BAI)
+            </button>
+            <button
+              onClick={() => {
+                setBamUrl(pacbio)
+                setBaiUrl(pacbio + '.bai')
+                setData(undefined)
+              }}
+            >
+              PacBio CLR reads (100Mb BAI)
+            </button>
+            <button
+              onClick={() => {
+                setBamUrl(pacbio2)
+                setBaiUrl(pacbio2 + '.bai')
+                setData(undefined)
+              }}
+            >
+              PacBio HiFi reads (2Mb BAI)
+            </button>
+            <button
+              onClick={() => {
+                setBamUrl(illumina)
+                setBaiUrl(illumina + '.bai')
+                setData(undefined)
+              }}
+            >
+              Illumina reads (9Mb BAI)
+            </button>
+          </div>
         </div>
       </div>
       {error ? (
@@ -156,7 +161,7 @@ function App() {
       ) : !data ? (
         <div>Loading...</div>
       ) : (
-        <DataViewer data={data} loc={loc} />
+        <DataViewer data={data} />
       )}
       <p>Supply a locstring to see what request pattern is generated</p>
     </div>

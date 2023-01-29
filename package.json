@@ -5,7 +5,8 @@
     "dev": "vite",
     "build": "vite build",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "postdeploy": "git push"
   },
   "dependencies": {
     "@gmod/bam": "^1.1.18",
