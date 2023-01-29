@@ -3,11 +3,10 @@ import { BamFile } from '@gmod/bam'
 
 // locals
 import Graph from './Graph'
-import { sum } from './util'
 import FileLayout from './FileLayout'
 
 function DataViewer({ data }: { data: any }) {
-  const { bai, binSizes, chrToIndex, indexToChr } = data
+  const { bai, chrToIndex, indexToChr } = data
   const [val, setVal] = useState(indexToChr[0].refName)
   const [colorMode, setColorMode] = useState('zscore')
 
@@ -36,11 +35,7 @@ function DataViewer({ data }: { data: any }) {
       </select>
 
       <br />
-      <Graph
-        bai={bai.indices[chrToIndex[val]]}
-        binSizes={binSizes}
-        colorMode={colorMode}
-      />
+      <Graph bai={bai.indices[chrToIndex[val]]} colorMode={colorMode} />
 
       <FileLayout data={data} val={val} />
     </div>
@@ -77,14 +72,7 @@ function App() {
         // @ts-ignore
         const bai = await bam.index.parse()
         console.log(bai.indices[0].binIndex)
-        // @ts-ignore
-        const binSizes = bai.indices.map(index =>
-          Object.values(index.binIndex).map(chunks =>
-            // @ts-ignore
-            sum(chunks.map(e => e.fetchedSize())),
-          ),
-        )
-        setData({ bam, indexToChr, chrToIndex, bai, header, binSizes })
+        setData({ bam, indexToChr, chrToIndex, bai, header })
       } catch (e) {
         setError(e)
         console.error(e)
@@ -95,7 +83,7 @@ function App() {
     <div className="App">
       <div>
         <h2>BAM index visualizer</h2>
-        <div style={{ display: 'flex' }}>
+        <div className="splitter">
           <div style={{ margin: 20 }}>
             <div>
               <label htmlFor="url">BAM URL: </label>

@@ -1,7 +1,5 @@
 import React, { useRef, useEffect } from 'react'
-import { max, min, sum } from './util'
-// @ts-ignore
-import zscore from 'math-z-score'
+import { max, sum } from './util'
 
 const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 
@@ -30,14 +28,6 @@ function drawRow({
   let lastDrawn = -Infinity
   ctx.fillStyle = colors[row]
   ctx.fillRect(0, yunit * row, 10, yunit)
-
-  for (let i = 0; i < size; i++, curr++) {
-    const chunks = bins[curr]
-    if (chunks) {
-      ctx.fillStyle = cb(sum(chunks.map((e: any) => e.fetchedSize())))
-      ctx.fillRect(20 + xunit * i, yunit * row, xmin, yunit)
-    }
-  }
   for (let i = 0; i < size; i++) {
     const px = Math.floor(xunit * i)
     if (px !== lastDrawn) {
@@ -45,17 +35,16 @@ function drawRow({
       lastDrawn = px
     }
   }
+  for (let i = 0; i < size; i++, curr++) {
+    const chunks = bins[curr]
+    if (chunks) {
+      ctx.fillStyle = cb(sum(chunks.map((e: any) => e.fetchedSize())))
+      ctx.fillRect(20 + xunit * i, yunit * row, xmin, yunit)
+    }
+  }
 }
 
-export default function Graph({
-  bai,
-  binSizes,
-  colorMode,
-}: {
-  bai: any
-  binSizes: number[][]
-  colorMode: string
-}) {
+export default function Graph({ bai }: { bai: any }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const canvas = ref.current
@@ -78,17 +67,12 @@ export default function Graph({
     width -= 2
 
     const bins = bai.binIndex
-    const obj = new zscore()
-    const flatted = binSizes.flat()
-    obj.setMeanAndDeviationFromDataset(flatted, true)
-    const minZ = min(flatted.map(f => obj.getZScore(f)))
-    const maxZ = Math.min(max(flatted.map(f => obj.getZScore(f))), 6)
+    const flatted = Object.values(bins)
+      .flat()
+      .map(f => f.fetchedSize()) as number[]
     const scalar = max(flatted)
-    const cb =
-      colorMode === 'zscore'
-        ? (f: number) =>
-            `hsl(${((minZ + obj.getZScore(f)) / (maxZ - minZ)) * 150},50%,50%)`
-        : (f: number) => `hsl(${Math.min((f / scalar) * 100, 200)},50%,50%)`
+    const cb = (f: number) =>
+      `hsl(${Math.min((f / scalar) * 100, 200)},50%,50%)`
 
     let curr = 0
     drawRow({
@@ -156,11 +140,11 @@ export default function Graph({
       curr,
       cb,
     })
-  }, [bai, colorMode, binSizes])
+  }, [bai])
 
   return (
     <div>
-      <div style={{ textAlign: 'center' }}>512Mbp</div>
+      <div style={{ textAlign: 'center' }}>512Mbp (mega-basepairs)</div>
       <canvas ref={ref} style={{ width: '90%', height: 200, margin: 10 }} />
       <p>
         The above diagram shows the distribution of data in the bins from the

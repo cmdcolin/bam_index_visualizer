@@ -7,7 +7,28 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+p,
+blockquote {
+  width: 50%;
+}
+
+.splitter {
+  display: 'flex';
+}
+
+@media screen and (max-width: 800px) {
+  .splitter {
+    flex-direction: column;
+  }
+  p,
+  blockquote {
+    width: 100%;
+  }
+  body {
+    margin: 2;
+  }
+}
+
+canvas {
+  border: 1px solid #999;
 }

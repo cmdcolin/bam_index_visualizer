@@ -11,7 +11,7 @@ export function sum(arr: number[]) {
 }
 
 export function max(arr: number[]) {
-  let max = 0
+  let max = -Infinity
   let len = arr.length
   for (let i = 0; i < len; i++) {
     max = Math.max(max, arr[i])
@@ -20,7 +20,7 @@ export function max(arr: number[]) {
 }
 
 export function min(arr: number[]) {
-  let min = 0
+  let min = Infinity
   let len = arr.length
   for (let i = 0; i < len; i++) {
     min = Math.min(min, arr[i])

@@ -12,7 +12,6 @@
     "@gmod/bam": "^1.1.18",
     "buffer": "^6.0.3",
     "gh-pages": "^5.0.0",
-    "math-z-score": "^1.0.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },
