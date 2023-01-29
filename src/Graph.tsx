@@ -24,7 +24,7 @@ function drawRow({
 }) {
   const xunit = width / size
   const xmin = Math.max(1, xunit)
-  ctx.strokeStyle = `rgb(0,0,0,0.5)`
+  ctx.strokeStyle = `rgb(0,0,0,0.6)`
   let lastDrawn = -Infinity
   for (let i = 0; i < size; i++) {
     const px = Math.floor(xunit * i)
@@ -50,8 +50,6 @@ export default function Graph({
   bai: any
   binSizes: number[][]
   colorMode: string
-  width?: number
-  height?: number
 }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
@@ -79,15 +77,12 @@ export default function Graph({
     const flatted = binSizes.flat()
     obj.setMeanAndDeviationFromDataset(flatted, true)
     const minZ = min(flatted.map(f => obj.getZScore(f)))
-
-    // some bins are super-gigantic, so clip for coloring purposes
     const maxZ = Math.min(max(flatted.map(f => obj.getZScore(f))), 6)
     const scalar = max(flatted)
-
     const cb =
       colorMode === 'zscore'
         ? (f: number) =>
-            `hsl(${((minZ + obj.getZScore(f)) / (maxZ - minZ)) * 100},50%,50%)`
+            `hsl(${((minZ + obj.getZScore(f)) / (maxZ - minZ)) * 150},50%,50%)`
         : (f: number) => `hsl(${Math.min((f / scalar) * 100, 200)},50%,50%)`
 
     let curr = 0
@@ -161,7 +156,7 @@ export default function Graph({
   return (
     <div>
       <div style={{ textAlign: 'center' }}>512Mbp</div>
-      <canvas ref={ref} style={{ width: '100%', height: 300 }} />
+      <canvas ref={ref} style={{ width: '90%', height: 200, margin: 10 }} />
       <p>
         The above diagram shows the distribution of data in the bins from the
         binning index from BAM index file for a particular chromosome
