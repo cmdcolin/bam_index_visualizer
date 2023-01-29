@@ -76,6 +76,7 @@ function App() {
 
         // @ts-ignore
         const bai = await bam.index.parse()
+        console.log(bai.indices[0].binIndex)
         // @ts-ignore
         const binSizes = bai.indices.map(index =>
           Object.values(index.binIndex).map(chunks =>

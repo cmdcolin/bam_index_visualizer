@@ -24,24 +24,25 @@ function drawRow({
   cb: (arg: number) => string
   ctx: CanvasRenderingContext2D
 }) {
-  const xunit = (width - 10) / size
+  const xunit = (width - 20) / size
   const xmin = Math.max(1, xunit)
-  ctx.strokeStyle = `rgb(0,0,0,0.6)`
+  ctx.strokeStyle = `rgb(0,0,0,0.3)`
   let lastDrawn = -Infinity
   ctx.fillStyle = colors[row]
   ctx.fillRect(0, yunit * row, 10, yunit)
-  for (let i = 0; i < size; i++) {
-    const px = Math.floor(xunit * i)
-    if (px !== lastDrawn) {
-      ctx.strokeRect(10 + xunit * i, yunit * row, xmin, yunit)
-      lastDrawn = px
-    }
-  }
+
   for (let i = 0; i < size; i++, curr++) {
     const chunks = bins[curr]
     if (chunks) {
       ctx.fillStyle = cb(sum(chunks.map((e: any) => e.fetchedSize())))
-      ctx.fillRect(10 + xunit * i, yunit * row, xmin, yunit)
+      ctx.fillRect(20 + xunit * i, yunit * row, xmin, yunit)
+    }
+  }
+  for (let i = 0; i < size; i++) {
+    const px = Math.floor(xunit * i)
+    if (px !== lastDrawn) {
+      ctx.strokeRect(20 + xunit * i, yunit * row, xmin, yunit)
+      lastDrawn = px
     }
   }
 }
@@ -75,9 +76,6 @@ export default function Graph({
     ctx.clearRect(0, 0, width, height)
     ctx.strokeStyle = 'black'
     width -= 2
-    height -= 2
-    ctx.strokeRect(1, 1, width, height)
-    ctx.translate(1, 1)
 
     const bins = bai.binIndex
     const obj = new zscore()
