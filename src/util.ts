@@ -105,23 +105,23 @@ export function optimizeChunks(
   return chunks
 }
 
-export function fmt(n: number) {
+export function fmt(n: number, fixed = 2) {
   if (n > 1_000_000_000) {
     return (
       (n / 1_000_000_000).toLocaleString(undefined, {
-        maximumFractionDigits: 2,
+        maximumFractionDigits: fixed,
       }) + 'Gb'
     )
   } else if (n > 1_000_000) {
     return (
       (n / 1_000_000).toLocaleString(undefined, {
-        maximumFractionDigits: 2,
+        maximumFractionDigits: fixed,
       }) + 'Mb'
     )
   } else if (n > 1_000) {
     return (
       (n / 1_000).toLocaleString(undefined, {
-        maximumFractionDigits: 2,
+        maximumFractionDigits: fixed,
       }) + 'kb'
     )
   } else return n + 'bytes'

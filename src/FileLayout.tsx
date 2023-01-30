@@ -22,7 +22,7 @@ function getLevel(b: number) {
 
 const h = 20
 
-export default function FileLayout({ data, val }: { data: any; val: string }) {
+export default function FileLayout({ data, chr }: { data: any; chr: string }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const ref2 = useRef<HTMLCanvasElement>(null)
   const [total, setTotal] = useState(0)
@@ -31,17 +31,17 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
   const [loc, setLoc] = useState('100-200')
   const { minVal, maxVal } = useMemo(() => {
     const { bai, chrToIndex } = data
-    const ba = bai.indices[chrToIndex[val]]
+    const ba = bai.indices[chrToIndex[chr]]
     const bins = Object.values(ba.binIndex).flat()
     const maxVal = max(bins.map(c => c.maxv.blockPosition))
     const minVal = min(bins.map(c => c.minv.blockPosition))
     return { minVal, maxVal }
-  }, [data, val])
+  }, [data, chr])
 
   const chunks = useMemo(() => {
     const [s, e] = loc.split('-') || []
     const { bai, chrToIndex } = data
-    const ba = bai.indices[chrToIndex[val]]
+    const ba = bai.indices[chrToIndex[chr]]
     let chunks = [] as Chunk[]
     if (s !== undefined && e !== undefined && ba) {
       const sp = +s.replaceAll(',', '')
@@ -49,7 +49,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
       chunks = getChunks(sp, ep, ba, optimize)
     }
     return chunks
-  }, [data, loc, val, optimize])
+  }, [data, loc, chr, optimize])
 
   useEffect(() => {
     const canvas = ref2.current
@@ -62,7 +62,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
     }
 
     const { bai, chrToIndex } = data
-    const ba = bai.indices[chrToIndex[val]]
+    const ba = bai.indices[chrToIndex[chr]]
     const width = canvas.getBoundingClientRect().width
     const height = canvas.getBoundingClientRect().height
     canvas.width = width
@@ -102,7 +102,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
       ctx.fillStyle = colors[level]
       ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 2), h)
     }
-  }, [data, val, minVal, maxVal, chunks])
+  }, [data, chr, minVal, maxVal, chunks])
 
   useEffect(() => {
     const canvas = ref.current
@@ -165,7 +165,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
 
       <div style={{ margin: 10 }}>
         <div style={{ textAlign: 'center', margin: 20 }}>
-          chromosome: {val} - occupies {fmt(minVal)} - {fmt(maxVal)} in file
+          chromosome: {chr} - occupies {fmt(minVal)} - {fmt(maxVal)} in file
           (bytes, not bp)
         </div>
         <p>Block positions for query, colored by bin level</p>

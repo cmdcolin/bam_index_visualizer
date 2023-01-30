@@ -7,14 +7,15 @@ import FileLayout from './FileLayout'
 
 function DataViewer({ data }: { data: any }) {
   const { bai, chrToIndex, indexToChr } = data
-  const [val, setVal] = useState(indexToChr[0].refName)
+  const [chr, setChr] = useState(indexToChr[0].refName)
+  const [maxVal, setMaxVal] = useState('')
   return (
     <div>
       <label htmlFor="chr">Chromosome:</label>
       <select
         id="chr"
-        value={val}
-        onChange={event => setVal(event.target.value)}
+        value={chr}
+        onChange={event => setChr(event.target.value)}
       >
         {indexToChr.map((name: { refName: string }) => (
           <option key={name.refName} value={name.refName}>
@@ -23,10 +24,18 @@ function DataViewer({ data }: { data: any }) {
         ))}
       </select>
 
-      <br />
-      <Graph bai={bai.indices[chrToIndex[val]]} />
+      <label htmlFor="maxval">Set color scale maximum on graph (bytes):</label>
+      <input
+        id="maxval"
+        type="text"
+        value={maxVal}
+        onChange={event => setMaxVal(event.target.value)}
+      />
 
-      <FileLayout data={data} val={val} />
+      <br />
+      <Graph bai={bai.indices[chrToIndex[chr]]} maxVal={maxVal} />
+
+      <FileLayout data={data} chr={chr} />
     </div>
   )
 }
@@ -45,6 +54,9 @@ const pacbio2 =
 
 const isoseq =
   'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/alzheimers_isoseq/hq_isoforms.fasta.bam'
+
+const sarscov2 =
+  'https://s3.amazonaws.com/jbrowse.org/genomes/sars-cov2/LSPA-3EBF5EC.220708_A01404_0494_BH3J3TDRX2.2t183.bam'
 
 function App() {
   const [bamUrl, setBamUrl] = useState(illumina)
@@ -86,6 +98,7 @@ function App() {
               <input
                 id="bam"
                 type="text"
+                className="urlinput"
                 value={bamUrl}
                 onChange={event => setBamUrl(event.target.value)}
               />
@@ -95,6 +108,7 @@ function App() {
               <input
                 id="bai"
                 type="text"
+                className="urlinput"
                 value={baiUrl}
                 onChange={event => setBaiUrl(event.target.value)}
               />
@@ -105,47 +119,62 @@ function App() {
             <button
               onClick={() => {
                 setData(undefined)
+                setError(undefined)
                 setBamUrl(nanopore)
                 setBaiUrl(nanopore + '.bai')
               }}
             >
-              Nanopore ultralong (60Mb BAI)
+              Nanopore ultralong (hg19, 60Mb BAI)
             </button>
             <button
               onClick={() => {
                 setData(undefined)
+                setError(undefined)
                 setBamUrl(pacbio)
                 setBaiUrl(pacbio + '.bai')
               }}
             >
-              PacBio CLR reads (100Mb BAI)
+              PacBio CLR reads (hg19, 100Mb BAI)
             </button>
             <button
               onClick={() => {
                 setData(undefined)
+                setError(undefined)
                 setBamUrl(pacbio2)
                 setBaiUrl(pacbio2 + '.bai')
               }}
             >
-              PacBio HiFi reads (2Mb BAI)
+              PacBio HiFi reads (hg19, 2Mb BAI)
             </button>
             <button
               onClick={() => {
                 setData(undefined)
+                setError(undefined)
                 setBamUrl(illumina)
                 setBaiUrl(illumina + '.bai')
               }}
             >
-              Illumina reads (9Mb BAI)
+              Illumina reads (hg19, 9Mb BAI)
             </button>
             <button
               onClick={() => {
                 setData(undefined)
+                setError(undefined)
                 setBamUrl(isoseq)
                 setBaiUrl(isoseq + '.bai')
               }}
             >
-              PacBio IsoSeq (1.5Mb BAI)
+              PacBio IsoSeq (hg19, 1.5Mb BAI)
+            </button>
+            <button
+              onClick={() => {
+                setData(undefined)
+                setError(undefined)
+                setBamUrl(sarscov2)
+                setBaiUrl(sarscov2 + '.bai')
+              }}
+            >
+              SARS-CoV2 (4kb BAI)
             </button>
           </div>
         </div>

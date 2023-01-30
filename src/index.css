@@ -28,7 +28,7 @@ blockquote {
     margin: 2;
   }
 
-  input[type='text'] {
+  .urlinput {
     width: 100%;
   }
 }
@@ -51,6 +51,14 @@ label {
 .buttons {
   margin: 20px;
 }
-input[type='text'] {
+.urlinput {
   width: 50%;
+}
+
+.rubberband {
+  background: #ccc;
+  cursor: crosshair;
+}
+.rubberband:hover {
+  background: #aaa;
 }
