@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { max, sum, colors, fmt } from './util'
+import { max, sum, fmt, fmt2 } from './util'
 
 function drawRow({
   size,
@@ -24,7 +24,7 @@ function drawRow({
   scale: number
   offset: number
 }) {
-  const xunit = (width / size) * scale * 2
+  const xunit = (width / size) * scale
   const xmin = Math.max(1, xunit)
   ctx.strokeStyle = `rgb(0,0,0,0.3)`
   let lastDrawn = -Infinity
@@ -52,6 +52,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
   const [mouseCurrent, setMouseCurrent] = useState<number>()
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState(0)
+  const [width, setWidth] = useState(0)
 
   useEffect(() => {
     if (mouseDown) {
@@ -69,7 +70,6 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
         const selW = Math.abs(mouseDown - event.clientX)
         const newScale = scale * (width / selW)
         const newOffset = (offset + minX) * (newScale / scale)
-
         setOffset(newOffset)
         setScale(newScale)
         setMouseCurrent(undefined)
@@ -204,13 +204,24 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     ctx.fillRect(width - 10, 0, 10, 75)
     ctx.strokeRect(width - 10, 0, 10, 75)
     ctx.fillStyle = 'black'
-    const str0 = `0 bytes`
-    const str1 = `${fmt(scalar, 0)} bytes`
+    const str0 = `0`
+    const str1 = `${fmt(scalar, 0)}`
     const res0 = ctx.measureText(str0)
     const res1 = ctx.measureText(str1)
     ctx.fillText(str1, width - 10 - res1.width, 10)
     ctx.fillText(str0, width - 10 - res0.width, 75)
   }, [bai, maxVal, scale, offset])
+  useEffect(() => {
+    const canvas = ref.current
+    if (!canvas) {
+      return
+    }
+
+    let { width } = canvas.getBoundingClientRect()
+    setWidth(width)
+  }, [])
+
+  const c = 2 ** 29 / scale
 
   return (
     <div>
@@ -256,7 +267,10 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
       >
         Zoom out
       </button>
-      <div style={{ textAlign: 'center' }}>512Mbp (mega-basepairs)</div>
+      <div style={{ textAlign: 'center' }}>
+        {fmt2(2 ** 29 / scale)} ({fmt2((offset / width) * c)} -{' '}
+        {fmt2(((offset + width) / width) * c)})
+      </div>
       <div style={{ position: 'relative' }}>
         {mouseCurrent && mouseDown ? (
           <div

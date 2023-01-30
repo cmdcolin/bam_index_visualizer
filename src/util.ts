@@ -105,26 +105,33 @@ export function optimizeChunks(
   return chunks
 }
 
-export function fmt(n: number, fixed = 2) {
+export function fmt(n: number, fixed = 0) {
   if (n > 1_000_000_000) {
-    return (
-      (n / 1_000_000_000).toLocaleString(undefined, {
-        maximumFractionDigits: fixed,
-      }) + 'Gb'
-    )
+    return f(n / 1_000_000_000, fixed) + 'Gb'
   } else if (n > 1_000_000) {
-    return (
-      (n / 1_000_000).toLocaleString(undefined, {
-        maximumFractionDigits: fixed,
-      }) + 'Mb'
-    )
+    return f(n / 1_000_000, fixed) + 'Mb'
   } else if (n > 1_000) {
-    return (
-      (n / 1_000).toLocaleString(undefined, {
-        maximumFractionDigits: fixed,
-      }) + 'kb'
-    )
-  } else return n + 'bytes'
+    return f(n / 1_000, fixed) + 'kb'
+  } else {
+    return f(n, fixed) + 'bytes'
+  }
+}
+
+function f(n: number, fixed = 0) {
+  return n.toLocaleString(undefined, {
+    maximumFractionDigits: fixed,
+  })
+}
+
+export function fmt2(n: number, fixed = 0) {
+  n = Math.min(Math.max(0, n), 2 ** 29)
+  if (n > 1024 * 1024 * 1024) {
+    return f(n / (1024 * 1024 * 1024), fixed) + 'Gbp'
+  } else if (n > 1024 * 1024) {
+    return f(n / (1024 * 1024), fixed) + 'Mbp'
+  } else if (n > 1024) {
+    return f(n / 1024, fixed) + 'kbp'
+  } else return f(n, fixed) + 'bp'
 }
 
 export function getChunks(s: number, e: number, ba: any, optimize: boolean) {

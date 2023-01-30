@@ -67,6 +67,7 @@ function App() {
     ;(async () => {
       try {
         setError(undefined)
+        setData(undefined)
         const bam = new BamFile({ bamUrl, baiUrl })
         const header = await bam.getHeader()
         // @ts-ignore
@@ -118,8 +119,6 @@ function App() {
             <div>Example files:</div>
             <button
               onClick={() => {
-                setData(undefined)
-                setError(undefined)
                 setBamUrl(nanopore)
                 setBaiUrl(nanopore + '.bai')
               }}
@@ -128,8 +127,6 @@ function App() {
             </button>
             <button
               onClick={() => {
-                setData(undefined)
-                setError(undefined)
                 setBamUrl(pacbio)
                 setBaiUrl(pacbio + '.bai')
               }}
@@ -138,8 +135,6 @@ function App() {
             </button>
             <button
               onClick={() => {
-                setData(undefined)
-                setError(undefined)
                 setBamUrl(pacbio2)
                 setBaiUrl(pacbio2 + '.bai')
               }}
@@ -148,8 +143,6 @@ function App() {
             </button>
             <button
               onClick={() => {
-                setData(undefined)
-                setError(undefined)
                 setBamUrl(illumina)
                 setBaiUrl(illumina + '.bai')
               }}
@@ -158,8 +151,6 @@ function App() {
             </button>
             <button
               onClick={() => {
-                setData(undefined)
-                setError(undefined)
                 setBamUrl(isoseq)
                 setBaiUrl(isoseq + '.bai')
               }}
@@ -168,8 +159,6 @@ function App() {
             </button>
             <button
               onClick={() => {
-                setData(undefined)
-                setError(undefined)
                 setBamUrl(sarscov2)
                 setBaiUrl(sarscov2 + '.bai')
               }}
