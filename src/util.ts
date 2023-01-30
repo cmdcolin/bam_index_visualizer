@@ -153,3 +153,5 @@ export function getChunks(s: number, e: number, ba: any, optimize: boolean) {
 
   return optimize ? optimizeChunks(chunks, lowest) : chunks
 }
+
+export const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']

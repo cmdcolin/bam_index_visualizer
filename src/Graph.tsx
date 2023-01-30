@@ -1,7 +1,5 @@
 import React, { useRef, useEffect } from 'react'
-import { max, sum } from './util'
-
-const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+import { max, sum, colors } from './util'
 
 function drawRow({
   size,
@@ -75,71 +73,17 @@ export default function Graph({ bai }: { bai: any }) {
       `hsl(${Math.min((f / scalar) * 100, 200)},50%,50%)`
 
     let curr = 0
-    drawRow({
-      size: 1,
-      row: 0,
-      bins,
-      yunit,
-      ctx,
-      width,
-      curr,
-      cb,
-    })
+    drawRow({ size: 1, row: 0, bins, yunit, ctx, width, curr, cb })
     curr += 1
-    drawRow({
-      size: 8,
-      row: 1,
-      bins,
-      yunit,
-      ctx,
-      width,
-      curr,
-      cb,
-    })
+    drawRow({ size: 8, row: 1, bins, yunit, ctx, width, curr, cb })
     curr += 8
-    drawRow({
-      size: 64,
-      row: 2,
-      bins,
-      yunit,
-      ctx,
-      width,
-      curr,
-      cb,
-    })
+    drawRow({ size: 64, row: 2, bins, yunit, ctx, width, curr, cb })
     curr += 64
-    drawRow({
-      size: 512,
-      row: 3,
-      bins,
-      yunit,
-      ctx,
-      width,
-      curr,
-      cb,
-    })
+    drawRow({ size: 512, row: 3, bins, yunit, ctx, width, curr, cb })
     curr += 512
-    drawRow({
-      size: 4096,
-      row: 4,
-      bins,
-      yunit,
-      ctx,
-      width,
-      curr,
-      cb,
-    })
+    drawRow({ size: 4096, row: 4, bins, yunit, ctx, width, curr, cb })
     curr += 4096
-    drawRow({
-      size: 32767,
-      row: 5,
-      bins,
-      yunit,
-      ctx,
-      width,
-      curr,
-      cb,
-    })
+    drawRow({ size: 32767, row: 5, bins, yunit, ctx, width, curr, cb })
   }, [bai])
 
   return (

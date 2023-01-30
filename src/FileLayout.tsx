@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react'
 import Chunk from './chunk'
-import { fmt, getChunks, max, min } from './util'
-
-const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+import { Chunks } from './Chunks'
+import { TotalsPerBin } from './TotalsPerBin'
+import { colors, fmt, getChunks, max, min } from './util'
 
 function getLevel(b: number) {
   if (b === 0) {
@@ -186,132 +186,5 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
         noted in SAMv1.pdf Sec 5.1.1 p.2
       </p>
     </div>
-  )
-}
-
-function Chunks({
-  context,
-  chunks,
-  loc,
-}: {
-  context: any
-  chunks: Chunk[]
-  loc: string
-}) {
-  const [stoppingPoint, setStoppingPoint] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [currChunk, setCurrChunk] = useState(0)
-  return (
-    <div>
-      <h2>Requested block overview</h2>
-      <button
-        onClick={async () => {
-          setLoading(true)
-          const [s, e] = loc.split('-') || []
-          if (s !== undefined && e !== undefined) {
-            const ep = +e.replaceAll(',', '')
-            const { bam } = context
-            let st = 0
-            let i = 0
-            for (const chunk of chunks) {
-              setCurrChunk(i++)
-              const { data, cpositions, dpositions } = await bam._readChunk({
-                chunk,
-              })
-              const records = await bam.readBamFeatures(
-                data,
-                cpositions,
-                dpositions,
-                chunk,
-              )
-
-              let done = false
-              for (let i = 0; i < records.length; i += 1) {
-                const feature = records[i]
-                if (feature.get('start') >= ep) {
-                  done = true
-                  break
-                }
-              }
-
-              if (done) {
-                setStoppingPoint(st)
-              } else {
-                st++
-              }
-            }
-          }
-          setLoading(false)
-        }}
-      >
-        Fetch BAM records to find which blocks actually have overlapping
-        features with query
-      </button>
-      <p>
-        Blocks to request for the requested region, ordered by the minimum file
-        position in the file:
-      </p>
-      {loading ? <div>Loading...processing chunk {currChunk}</div> : null}
-      <div style={{ height: 400, overflow: 'auto' }}>
-        <li>
-          {chunks.map((c, idx) => (
-            <ul
-              key={JSON.stringify(c) + '-' + idx}
-              style={{ background: idx < stoppingPoint ? '#0a03' : '#a003' }}
-            >
-              bin number: {c.bin} - file offsets {fmt(c.minv.blockPosition)} -{' '}
-              {fmt(c.maxv.blockPosition)} (fetched size {fmt(c.fetchedSize())}){' '}
-              {idx < stoppingPoint
-                ? ' (Found features in this chunk)'
-                : ' (No features in this chunk)'}
-            </ul>
-          ))}
-        </li>
-      </div>
-    </div>
-  )
-}
-
-function TotalsPerBin({
-  total,
-  totalPerBin,
-}: {
-  total: number
-  totalPerBin?: number[]
-}) {
-  return (
-    <>
-      {totalPerBin ? (
-        <div>
-          <p>
-            Canvas shows the requested byte-ranges of the BAM file from the
-            coordinate query.
-          </p>
-          <p>
-            Total size of blocks from index {fmt(total)}. Real data downloaded
-            from BAM may be less because of [1], test this with the "Requested
-            block overview" window
-          </p>
-          <div>
-            On each bin level, data fetches amount to{' '}
-            <ul>
-              {totalPerBin.map((t, i) => (
-                <li key={i}>
-                  <div
-                    style={{
-                      background: colors[i],
-                      width: 10,
-                      height: 10,
-                      display: 'inline-block',
-                    }}
-                  />{' '}
-                  {i} - {fmt(t)}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : null}
-    </>
   )
 }

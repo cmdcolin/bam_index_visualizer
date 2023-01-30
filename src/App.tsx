@@ -145,7 +145,7 @@ function App() {
                 setBaiUrl(isoseq + '.bai')
               }}
             >
-              PacBio IsoSeq (9Mb BAI)
+              PacBio IsoSeq (1.5Mb BAI)
             </button>
           </div>
         </div>

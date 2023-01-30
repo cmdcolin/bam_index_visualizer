@@ -27,6 +27,10 @@ blockquote {
   body {
     margin: 2;
   }
+
+  input {
+    width: 100%;
+  }
 }
 
 canvas {
@@ -43,4 +47,7 @@ ul {
 
 .buttons {
   margin: 20px;
+}
+input {
+  width: 50%;
 }
