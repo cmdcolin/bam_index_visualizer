@@ -67,7 +67,7 @@ export function Chunks({
         }}
       >
         Fetch BAM records to find which blocks actually have overlapping
-        features with query
+        features with query (note: can download large amounts of data)
       </button>
       <p>
         Blocks to request for the requested region, ordered by the minimum file

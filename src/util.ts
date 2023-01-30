@@ -62,7 +62,11 @@ export function canMergeBlocks(chunk1: Chunk, chunk2: Chunk) {
   )
 }
 
-export function optimizeChunks(chunks: Chunk[], lowest: VirtualOffset) {
+export function optimizeChunks(
+  chunks: Chunk[],
+  lowest: VirtualOffset,
+  dedupe: boolean,
+) {
   const mergedChunks: Chunk[] = []
   let lastChunk: Chunk | null = null
 
@@ -78,26 +82,27 @@ export function optimizeChunks(chunks: Chunk[], lowest: VirtualOffset) {
       return c0.minv.dataPosition - c1.minv.dataPosition
     }
   })
-
-  chunks.forEach(chunk => {
-    if (!lowest || chunk.maxv.compareTo(lowest) > 0) {
-      if (lastChunk === null) {
-        mergedChunks.push(chunk)
-        lastChunk = chunk
-      } else {
-        if (canMergeBlocks(lastChunk, chunk)) {
-          if (chunk.maxv.compareTo(lastChunk.maxv) > 0) {
-            lastChunk.maxv = chunk.maxv
-          }
-        } else {
+  if (dedupe) {
+    chunks.forEach(chunk => {
+      if (!lowest || chunk.maxv.compareTo(lowest) > 0) {
+        if (lastChunk === null) {
           mergedChunks.push(chunk)
           lastChunk = chunk
+        } else {
+          if (canMergeBlocks(lastChunk, chunk)) {
+            if (chunk.maxv.compareTo(lastChunk.maxv) > 0) {
+              lastChunk.maxv = chunk.maxv
+            }
+          } else {
+            mergedChunks.push(chunk)
+            lastChunk = chunk
+          }
         }
       }
-    }
-  })
-
-  return mergedChunks
+    })
+    return mergedChunks
+  }
+  return chunks
 }
 
 export function fmt(n: number) {
@@ -151,7 +156,7 @@ export function getChunks(s: number, e: number, ba: any, optimize: boolean) {
     }
   }
 
-  return optimize ? optimizeChunks(chunks, lowest) : chunks
+  return optimizeChunks(chunks, lowest, optimize)
 }
 
 export const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']

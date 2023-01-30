@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react'
-import { max, sum, colors } from './util'
+import { max, sum, colors, fmt } from './util'
 
 function drawRow({
   size,
@@ -84,6 +84,25 @@ export default function Graph({ bai }: { bai: any }) {
     drawRow({ size: 4096, row: 4, bins, yunit, ctx, width, curr, cb })
     curr += 4096
     drawRow({ size: 32767, row: 5, bins, yunit, ctx, width, curr, cb })
+
+    var gradient = ctx.createLinearGradient(0, 0, 0, 75)
+    gradient.addColorStop(0, 'hsl(100,50%,50%)')
+    gradient.addColorStop(1 / 5, 'hsl(80,50%,50%)')
+    gradient.addColorStop(2 / 5, 'hsl(60,50%,50%)')
+    gradient.addColorStop(3 / 5, 'hsl(40,50%,50%)')
+    gradient.addColorStop(4 / 5, 'hsl(20,50%,50%)')
+    gradient.addColorStop(1, 'hsl(0,50%,50%)')
+
+    ctx.fillStyle = gradient
+    ctx.fillRect(width - 10, 0, 10, 75)
+    ctx.strokeRect(width - 10, 0, 10, 75)
+    ctx.fillStyle = 'black'
+    const str0 = `0 bytes`
+    const str1 = `${fmt(scalar)} bytes`
+    const res0 = ctx.measureText(str0)
+    const res1 = ctx.measureText(str1)
+    ctx.fillText(str1, width - 10 - res1.width, 10)
+    ctx.fillText(str0, width - 10 - res0.width, 75)
   }, [bai])
 
   return (
@@ -92,7 +111,8 @@ export default function Graph({ bai }: { bai: any }) {
       <canvas ref={ref} style={{ width: '90%', height: 200, margin: 10 }} />
       <p>
         The above diagram shows the distribution of data in the bins from the
-        binning index from BAM index file for a particular chromosome
+        binning index from BAM index file for a particular chromosome. There are
+        multiple bin levels which can help hold larger elements in the BAM file.
       </p>
     </div>
   )

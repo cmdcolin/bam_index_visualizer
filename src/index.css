@@ -28,7 +28,7 @@ blockquote {
     margin: 2;
   }
 
-  input {
+  input[type='text'] {
     width: 100%;
   }
 }
@@ -45,9 +45,12 @@ ul {
   margin: 20px;
 }
 
+label {
+  margin: 10px;
+}
 .buttons {
   margin: 20px;
 }
-input {
+input[type='text'] {
   width: 50%;
 }

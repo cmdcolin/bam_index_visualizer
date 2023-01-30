@@ -142,8 +142,8 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
       <h2>Request pattern for a given query</h2>
       <div>
         <label htmlFor="locstring">
-          Enter start and end e.g. 1-100 for the file request for the current
-          chromosome
+          Enter start and end bp coordinate e.g. 1-100 to query for the current
+          chromosome, and get results about the blocks being requested
         </label>
         <input
           id="locstring"
@@ -151,7 +151,10 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
           value={loc}
           onChange={event => setLoc(event.target.value)}
         />
-        <label htmlFor="optimize">Optimize chunks?</label>
+        <br />
+        <label htmlFor="optimize">
+          Optimize/de-duplicate overlapping chunks?
+        </label>
         <input
           id="optimize"
           type="checkbox"
