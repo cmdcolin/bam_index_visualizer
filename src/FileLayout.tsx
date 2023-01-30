@@ -22,13 +22,21 @@ function getLevel(b: number) {
 
 const h = 20
 
-export default function FileLayout({ data, chr }: { data: any; chr: string }) {
+export default function FileLayout({
+  data,
+  chr,
+  currPos,
+}: {
+  data: any
+  chr: string
+  currPos: [number, number]
+}) {
   const ref = useRef<HTMLCanvasElement>(null)
   const ref2 = useRef<HTMLCanvasElement>(null)
   const [total, setTotal] = useState(0)
   const [optimize, setOptimize] = useState(true)
   const [totalPerBin, setTotalPerBin] = useState<number[]>()
-  const [loc, setLoc] = useState('100-200')
+  const [sp, ep] = currPos
   const { minVal, maxVal } = useMemo(() => {
     const { bai, chrToIndex } = data
     const ba = bai.indices[chrToIndex[chr]]
@@ -39,17 +47,12 @@ export default function FileLayout({ data, chr }: { data: any; chr: string }) {
   }, [data, chr])
 
   const chunks = useMemo(() => {
-    const [s, e] = loc.split('-') || []
     const { bai, chrToIndex } = data
     const ba = bai.indices[chrToIndex[chr]]
     let chunks = [] as Chunk[]
-    if (s !== undefined && e !== undefined && ba) {
-      const sp = +s.replaceAll(',', '')
-      const ep = +e.replaceAll(',', '')
-      chunks = getChunks(sp, ep, ba, optimize)
-    }
+    chunks = getChunks(sp, ep, ba, optimize)
     return chunks
-  }, [data, loc, chr, optimize])
+  }, [data, sp, ep, chr, optimize])
 
   useEffect(() => {
     const canvas = ref2.current
@@ -141,17 +144,6 @@ export default function FileLayout({ data, chr }: { data: any; chr: string }) {
     <div>
       <h2>Request pattern for a given query</h2>
       <div>
-        <label htmlFor="locstring">
-          Enter start and end bp coordinate e.g. 1-100 to query for the current
-          chromosome, and get results about the blocks being requested
-        </label>
-        <input
-          id="locstring"
-          type="text"
-          value={loc}
-          onChange={event => setLoc(event.target.value)}
-        />
-        <br />
         <label htmlFor="optimize">
           Optimize/de-duplicate overlapping chunks?
         </label>
@@ -177,7 +169,7 @@ export default function FileLayout({ data, chr }: { data: any; chr: string }) {
         <canvas ref={ref2} style={{ width: '90%', height: h * 6 }} />
       </div>
       <TotalsPerBin total={total} totalPerBin={totalPerBin} />
-      <Chunks chunks={chunks} context={data} loc={loc} />
+      <Chunks chunks={chunks} context={data} currPos={currPos} />
 
       <p>
         [1] You may observe in the above diagram that the requests are scattered

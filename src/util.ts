@@ -105,7 +105,7 @@ export function optimizeChunks(
   return chunks
 }
 
-export function fmt(n: number, fixed = 0) {
+export function fmt(n: number, fixed = 2) {
   if (n > 1_000_000_000) {
     return f(n / 1_000_000_000, fixed) + 'Gb'
   } else if (n > 1_000_000) {

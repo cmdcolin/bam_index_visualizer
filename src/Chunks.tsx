@@ -5,62 +5,59 @@ import { fmt } from './util'
 export function Chunks({
   context,
   chunks,
-  loc,
+  currPos,
 }: {
   context: any
   chunks: Chunk[]
-  loc: string
+  currPos: [number, number]
 }) {
   const [stoppingPoint, setStoppingPoint] = useState(0)
   const [totalFetched, setTotalFetched] = useState(0)
   const [loading, setLoading] = useState(false)
   const [currChunk, setCurrChunk] = useState(0)
+  const [sp, ep] = currPos
   useEffect(() => {
     setStoppingPoint(0)
     setTotalFetched(0)
-  }, [chunks, loc])
+  }, [chunks, sp, ep])
   return (
     <div>
       <h2>Requested block overview</h2>
       <button
         onClick={async () => {
           setLoading(true)
-          const [s, e] = loc.split('-') || []
-          if (s !== undefined && e !== undefined) {
-            const ep = +e.replaceAll(',', '')
-            const { bam } = context
-            let stoppingPoint = 0
-            let i = 0
-            let totalFetched = 0
-            for (const chunk of chunks) {
-              setCurrChunk(i++)
-              const { data, cpositions, dpositions } = await bam._readChunk({
-                chunk,
-              })
-              const records = await bam.readBamFeatures(
-                data,
-                cpositions,
-                dpositions,
-                chunk,
-              )
-              totalFetched += chunk.fetchedSize()
+          const { bam } = context
+          let stoppingPoint = 0
+          let i = 0
+          let totalFetched = 0
+          for (const chunk of chunks) {
+            setCurrChunk(i++)
+            const { data, cpositions, dpositions } = await bam._readChunk({
+              chunk,
+            })
+            const records = await bam.readBamFeatures(
+              data,
+              cpositions,
+              dpositions,
+              chunk,
+            )
+            totalFetched += chunk.fetchedSize()
 
-              let done = false
-              for (let i = 0; i < records.length; i += 1) {
-                const feature = records[i]
-                if (feature.get('start') >= ep) {
-                  done = true
-                  break
-                }
-              }
-
-              if (done) {
-                setStoppingPoint(stoppingPoint + 1)
-                setTotalFetched(totalFetched)
+            let done = false
+            for (let i = 0; i < records.length; i += 1) {
+              const feature = records[i]
+              if (feature.get('start') >= ep) {
+                done = true
                 break
-              } else {
-                stoppingPoint++
               }
+            }
+
+            if (done) {
+              setStoppingPoint(stoppingPoint + 1)
+              setTotalFetched(totalFetched)
+              break
+            } else {
+              stoppingPoint++
             }
           }
           setLoading(false)
@@ -76,9 +73,9 @@ export function Chunks({
       {loading ? <div>Loading...processing chunk {currChunk}</div> : null}
       {totalFetched ? <div>Total fetched: {fmt(totalFetched)}</div> : null}
       <div style={{ height: 400, overflow: 'auto' }}>
-        <li>
+        <ul>
           {chunks.map((c, idx) => (
-            <ul
+            <li
               key={JSON.stringify(c) + '-' + idx}
               style={{
                 background:
@@ -94,9 +91,9 @@ export function Chunks({
               {idx < stoppingPoint
                 ? ' (Found features in this chunk)'
                 : ' (No features in this chunk)'}
-            </ul>
+            </li>
           ))}
-        </li>
+        </ul>
       </div>
     </div>
   )

@@ -9,6 +9,7 @@ function DataViewer({ data }: { data: any }) {
   const { bai, chrToIndex, indexToChr } = data
   const [chr, setChr] = useState(indexToChr[0].refName)
   const [maxVal, setMaxVal] = useState('')
+  const [currPos, setCurrPos] = useState<[number, number]>()
   return (
     <div>
       <label htmlFor="chr">Chromosome:</label>
@@ -33,9 +34,13 @@ function DataViewer({ data }: { data: any }) {
       />
 
       <br />
-      <Graph bai={bai.indices[chrToIndex[chr]]} maxVal={maxVal} />
+      <Graph
+        bai={bai.indices[chrToIndex[chr]]}
+        maxVal={maxVal}
+        setCurrPos={setCurrPos}
+      />
 
-      <FileLayout data={data} chr={chr} />
+      {currPos ? <FileLayout data={data} chr={chr} currPos={currPos} /> : null}
     </div>
   )
 }

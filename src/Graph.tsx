@@ -1,5 +1,23 @@
 import React, { useRef, useState, useEffect } from 'react'
+import Chunk from './chunk'
 import { max, sum, fmt, fmt2 } from './util'
+
+function fillRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  screen: number,
+  cb: (arg: number) => string,
+  size: number,
+) {
+  if (x + width < 0 || x > screen) {
+    return
+  }
+  ctx.fillStyle = cb(size)
+  ctx.fillRect(x, y, width, height)
+}
 
 function drawRow({
   size,
@@ -14,7 +32,7 @@ function drawRow({
   offset,
 }: {
   size: number
-  bins: any
+  bins: { [key: string]: number }
   curr: number
   row: number
   yunit: number
@@ -28,8 +46,6 @@ function drawRow({
   const xmin = Math.max(1, xunit)
   ctx.strokeStyle = `rgb(0,0,0,0.3)`
   let lastDrawn = -Infinity
-  // ctx.fillStyle = colors[row]
-  // ctx.fillRect(0, yunit * row, 10, yunit)
   for (let i = 0; i < size; i++) {
     const px = Math.floor(xunit * i)
     if (px !== lastDrawn) {
@@ -38,21 +54,42 @@ function drawRow({
     }
   }
   for (let i = 0; i < size; i++, curr++) {
-    const chunks = bins[curr]
-    if (chunks) {
-      ctx.fillStyle = cb(sum(chunks.map((e: any) => e.fetchedSize())))
-      ctx.fillRect(xunit * i - offset, yunit * row, xmin, yunit)
+    const totalBinSize = bins[curr]
+    if (totalBinSize) {
+      fillRect(
+        ctx,
+        xunit * i - offset,
+        yunit * row,
+        xmin,
+        yunit,
+        width,
+        cb,
+        totalBinSize,
+      )
     }
   }
 }
 
-export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
+export default function Graph({
+  bai,
+  maxVal,
+  setCurrPos,
+}: {
+  bai: any
+  maxVal: string
+  setCurrPos: (arg: [number, number]) => void
+}) {
   const ref = useRef<HTMLCanvasElement>(null)
   const [mouseDown, setMouseDown] = useState<number>()
   const [mouseCurrent, setMouseCurrent] = useState<number>()
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState(0)
   const [width, setWidth] = useState(0)
+
+  const c = 2 ** 29 / scale
+  useEffect(() => {
+    setCurrPos([(offset / width) * c, ((offset + width) / width) * c])
+  }, [offset, width, c])
 
   useEffect(() => {
     if (mouseDown) {
@@ -102,14 +139,14 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
 
     const yunit = height / 6
     ctx.clearRect(0, 0, width, height)
-    ctx.strokeStyle = 'black'
-    width -= 2
 
-    const bins = bai.binIndex
-    const flatted = Object.values(bins)
-      .flat()
-      .map(f => f.fetchedSize()) as number[]
-    const scalar = maxVal ? +maxVal : max(flatted)
+    const sizes = Object.fromEntries(
+      Object.entries(bai.binIndex).map(([key, val]) => [
+        key,
+        sum(val.map(f => f.fetchedSize())),
+      ]),
+    )
+    const scalar = maxVal ? +maxVal : max(Object.values(sizes))
     const cb = (f: number) =>
       `hsl(${Math.min((f / scalar) * 100, 200)},50%,50%)`
 
@@ -117,7 +154,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     drawRow({
       size: 1,
       row: 0,
-      bins,
+      bins: sizes,
       yunit,
       ctx,
       width,
@@ -130,7 +167,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     drawRow({
       size: 8,
       row: 1,
-      bins,
+      bins: sizes,
       yunit,
       ctx,
       width,
@@ -143,7 +180,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     drawRow({
       size: 64,
       row: 2,
-      bins,
+      bins: sizes,
       yunit,
       ctx,
       width,
@@ -156,7 +193,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     drawRow({
       size: 512,
       row: 3,
-      bins,
+      bins: sizes,
       yunit,
       ctx,
       width,
@@ -169,7 +206,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     drawRow({
       size: 4096,
       row: 4,
-      bins,
+      bins: sizes,
       yunit,
       ctx,
       width,
@@ -182,7 +219,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     drawRow({
       size: 32767,
       row: 5,
-      bins,
+      bins: sizes,
       yunit,
       ctx,
       width,
@@ -220,8 +257,6 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     let { width } = canvas.getBoundingClientRect()
     setWidth(width)
   }, [])
-
-  const c = 2 ** 29 / scale
 
   return (
     <div>
