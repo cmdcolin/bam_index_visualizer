@@ -25,6 +25,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
   const [minVal, setMinVal] = useState(0)
   const [maxVal, setMaxVal] = useState(0)
   const [total, setTotal] = useState(0)
+  const [optimize, setOptimize] = useState(false)
   const [totalPerBin, setTotalPerBin] = useState<number[]>()
   const [loc, setLoc] = useState('100-200')
   const h = 20
@@ -70,7 +71,11 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
       const sp = +s.replaceAll(',', '')
       const ep = +e.replaceAll(',', '')
 
-      const chunks = getChunks(sp, ep, ba)
+      const chunks = getChunks(sp, ep, ba, optimize)
+      const bins = Object.values(ba.binIndex).flat()
+      const maxVal = max(bins.map(c => c.maxv.blockPosition))
+      const minVal = min(bins.map(c => c.minv.blockPosition))
+
       for (let i = 0; i < chunks.length; i++) {
         const c = chunks[i]
         const len = maxVal - minVal
@@ -81,7 +86,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
         ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 2), h)
       }
     }
-  }, [data, val, loc, maxVal, minVal])
+  }, [data, val, loc, maxVal, minVal, optimize])
 
   useEffect(() => {
     const canvas = ref.current
@@ -108,7 +113,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
       }
       const sp = +s.replaceAll(',', '')
       const ep = +e.replaceAll(',', '')
-      const chunks = getChunks(sp, ep, ba)
+      const chunks = getChunks(sp, ep, ba, optimize)
       const bins = Object.values(ba.binIndex).flat()
       const maxVal = max(bins.map(c => c.maxv.blockPosition))
       const minVal = min(bins.map(c => c.minv.blockPosition))
@@ -127,11 +132,9 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
         ctx.fillRect(x1 * width, 0, Math.max((x2 - x1) * width, 2), h + 2)
       }
       setTotal(total)
-      setMaxVal(maxVal)
-      setMinVal(minVal)
       setTotalPerBin(totalPerBin)
     }
-  }, [data, loc, val])
+  }, [data, loc, val, optimize])
 
   return (
     <div>
@@ -146,6 +149,13 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
           type="text"
           value={loc}
           onChange={event => setLoc(event.target.value)}
+        />
+        <label htmlFor="optimize">Optimize chunks?</label>
+        <input
+          id="optimize"
+          type="checkbox"
+          checked={optimize}
+          onChange={event => setOptimize(event.target.checked)}
         />
       </div>
 

@@ -122,7 +122,7 @@ export function fmt(n: number) {
   } else return n + 'bytes'
 }
 
-export function getChunks(s: number, e: number, ba: any) {
+export function getChunks(s: number, e: number, ba: any, optimize: boolean) {
   const chunks = [] as Chunk[]
   const bins = reg2bins(s, e)
   let k = 0
@@ -138,7 +138,6 @@ export function getChunks(s: number, e: number, ba: any) {
       }
     }
   }
-  console.log({ k, bins })
 
   // Use the linear index to find minimum file position of chunks that could
   // contain alignments in the region
@@ -155,5 +154,5 @@ export function getChunks(s: number, e: number, ba: any) {
     }
   }
 
-  return optimizeChunks(chunks, lowest)
+  return optimize ? optimizeChunks(chunks, lowest) : chunks
 }
