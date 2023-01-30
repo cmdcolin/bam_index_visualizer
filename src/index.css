@@ -32,3 +32,15 @@ blockquote {
 canvas {
   border: 1px solid #999;
 }
+
+ul {
+  margin: 0px;
+}
+
+.form {
+  margin: 20px;
+}
+
+.buttons {
+  margin: 20px;
+}

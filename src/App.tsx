@@ -43,6 +43,9 @@ const illumina =
 const pacbio2 =
   'https://jbrowse.org/genomes/hg19/pacbio/m64011_181218_235052.8M.HG002.hs37d5.11kb.bam'
 
+const isoseq =
+  'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/alzheimers_isoseq/hq_isoforms.fasta.bam'
+
 function App() {
   const [bamUrl, setBamUrl] = useState(illumina)
   const [baiUrl, setBaiUrl] = useState(illumina + '.bai')
@@ -51,6 +54,7 @@ function App() {
   useEffect(() => {
     ;(async () => {
       try {
+        setError(undefined)
         const bam = new BamFile({ bamUrl, baiUrl })
         const header = await bam.getHeader()
         // @ts-ignore
@@ -60,7 +64,6 @@ function App() {
 
         // @ts-ignore
         const bai = await bam.index.parse()
-        console.log(bai.indices[0].binIndex)
         setData({ bam, indexToChr, chrToIndex, bai, header })
       } catch (e) {
         setError(e)
@@ -72,8 +75,12 @@ function App() {
     <div className="App">
       <div>
         <h2>BAM index visualizer</h2>
+        <p>
+          This is a project that helps visualize the structure of the bin index
+          of BAM index (BAI) files
+        </p>
         <div className="splitter">
-          <div style={{ margin: 20 }}>
+          <div className="form">
             <div>
               <label htmlFor="url">BAM URL: </label>
               <input
@@ -93,43 +100,52 @@ function App() {
               />
             </div>
           </div>
-          <div style={{ margin: 20 }}>
+          <div className="buttons">
             <div>Example files:</div>
             <button
               onClick={() => {
+                setData(undefined)
                 setBamUrl(nanopore)
                 setBaiUrl(nanopore + '.bai')
-                setData(undefined)
               }}
             >
               Nanopore ultralong (60Mb BAI)
             </button>
             <button
               onClick={() => {
+                setData(undefined)
                 setBamUrl(pacbio)
                 setBaiUrl(pacbio + '.bai')
-                setData(undefined)
               }}
             >
               PacBio CLR reads (100Mb BAI)
             </button>
             <button
               onClick={() => {
+                setData(undefined)
                 setBamUrl(pacbio2)
                 setBaiUrl(pacbio2 + '.bai')
-                setData(undefined)
               }}
             >
               PacBio HiFi reads (2Mb BAI)
             </button>
             <button
               onClick={() => {
+                setData(undefined)
                 setBamUrl(illumina)
                 setBaiUrl(illumina + '.bai')
-                setData(undefined)
               }}
             >
               Illumina reads (9Mb BAI)
+            </button>
+            <button
+              onClick={() => {
+                setData(undefined)
+                setBamUrl(isoseq)
+                setBaiUrl(isoseq + '.bai')
+              }}
+            >
+              PacBio IsoSeq (9Mb BAI)
             </button>
           </div>
         </div>
@@ -141,7 +157,6 @@ function App() {
       ) : (
         <DataViewer data={data} />
       )}
-      <p>Supply a locstring to see what request pattern is generated</p>
     </div>
   )
 }

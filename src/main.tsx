@@ -1,15 +1,14 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
-import './index.css'
+import ReactDOM from 'react-dom/client'
 import App from './App'
 import { Buffer } from 'buffer'
+import './index.css'
 
 // @ts-ignore
 globalThis.Buffer = Buffer
 
-ReactDOM.render(
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-  document.getElementById('root'),
 )

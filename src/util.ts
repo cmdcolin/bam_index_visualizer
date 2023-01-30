@@ -125,14 +125,11 @@ export function fmt(n: number) {
 export function getChunks(s: number, e: number, ba: any, optimize: boolean) {
   const chunks = [] as Chunk[]
   const bins = reg2bins(s, e)
-  let k = 0
   for (const [start, end] of bins) {
     for (let bin = start; bin <= end; bin++) {
       if (ba.binIndex[bin]) {
         const binChunks = ba.binIndex[bin]
-        console.log({ binChunks, bin })
         for (let c = 0; c < binChunks.length; ++c) {
-          k++
           chunks.push(binChunks[c])
         }
       }
