@@ -68,9 +68,11 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
         let width = canvas.getBoundingClientRect().width
         const min = Math.min(mouseDown, event.clientX)
         const wid = Math.abs(mouseDown - event.clientX)
-        const newScale = scale * width * (1 / wid)
-        setScale(scale * width * (1 / wid))
-        setOffset(newScale * min)
+        const newScale = scale * (width / wid)
+        const newOffset = newScale * min
+        console.log({ newScale, newOffset, offset, min })
+        setScale(newScale)
+        setOffset(newOffset)
       }
       function onMouseMove(event: MouseEvent) {
         setMouseCurrent(event.clientX)
@@ -82,7 +84,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
         document.removeEventListener('mouseup', onMouseUp)
       }
     } else return () => {}
-  }, [mouseDown])
+  }, [mouseDown, scale, offset])
 
   useEffect(() => {
     const canvas = ref.current
@@ -221,7 +223,20 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
         Reset zoom
       </button>
       <button onClick={() => setScale(scale * 1.5)}>Zoom in</button>
-      <button onClick={() => setScale(scale / 1.5)}>Zoom out</button>
+      <button
+        onClick={() => {
+          const newScale = scale / 1.5
+          setScale(newScale)
+          // const canvas = ref.current
+          // if (!canvas) {
+          //   return
+          // }
+          // let w2 = canvas.getBoundingClientRect().width / 2
+          // setOffset((offset + w2) / newScale - w2)
+        }}
+      >
+        Zoom out
+      </button>
       <div style={{ textAlign: 'center' }}>512Mbp (mega-basepairs)</div>
       <div style={{ position: 'relative' }}>
         {mouseCurrent && mouseDown ? (
