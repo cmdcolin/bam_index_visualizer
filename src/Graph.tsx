@@ -63,16 +63,17 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
         if (!canvas) {
           return
         }
+
+        const { width, left } = canvas.getBoundingClientRect()
+        const minX = Math.min(mouseDown, event.clientX) - left
+        const selW = Math.abs(mouseDown - event.clientX)
+        const newScale = scale * (width / selW)
+        const newOffset = (offset + minX) * (newScale / scale)
+
+        setOffset(newOffset)
+        setScale(newScale)
         setMouseCurrent(undefined)
         setMouseDown(undefined)
-        let width = canvas.getBoundingClientRect().width
-        const min = Math.min(mouseDown, event.clientX)
-        const wid = Math.abs(mouseDown - event.clientX)
-        const newScale = scale * (width / wid)
-        const newOffset = newScale * min
-        console.log({ newScale, newOffset, offset, min })
-        setScale(newScale)
-        setOffset(newOffset)
       }
       function onMouseMove(event: MouseEvent) {
         setMouseCurrent(event.clientX)
@@ -95,8 +96,7 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
     if (!ctx) {
       return
     }
-    let width = canvas.getBoundingClientRect().width
-    let height = canvas.getBoundingClientRect().height
+    let { width, height } = canvas.getBoundingClientRect()
     canvas.width = width
     canvas.height = height
 
@@ -222,17 +222,36 @@ export default function Graph({ bai, maxVal }: { bai: any; maxVal: string }) {
       >
         Reset zoom
       </button>
-      <button onClick={() => setScale(scale * 1.5)}>Zoom in</button>
       <button
         onClick={() => {
-          const newScale = scale / 1.5
+          const oldScale = scale
+          const newScale = scale * 1.5
+
+          const canvas = ref.current
+          if (!canvas) {
+            return
+          }
+          const w2 = canvas.getBoundingClientRect().width / 2
+          const newOffset = ((offset + w2) * newScale) / oldScale - w2
+          setOffset(newOffset)
           setScale(newScale)
-          // const canvas = ref.current
-          // if (!canvas) {
-          //   return
-          // }
-          // let w2 = canvas.getBoundingClientRect().width / 2
-          // setOffset((offset + w2) / newScale - w2)
+        }}
+      >
+        Zoom in
+      </button>
+      <button
+        onClick={() => {
+          const oldScale = scale
+          const newScale = scale / 1.5
+
+          const canvas = ref.current
+          if (!canvas) {
+            return
+          }
+          const w2 = canvas.getBoundingClientRect().width / 2
+          const newOffset = ((offset + w2) * newScale) / oldScale - w2
+          setOffset(newOffset)
+          setScale(newScale)
         }}
       >
         Zoom out
