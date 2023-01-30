@@ -1,46 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react'
-import Chunk from './chunk'
-import { max, min, optimizeChunks, reg2bins } from './util'
+import { fmt, getChunks, max, min } from './util'
 
-const colors = ['red', 'orange', '#FFD700', 'green', 'blue', 'purple']
-
-console.log(reg2bins(100, 200))
-
-function getChunks(s: number, e: number, ba: any) {
-  const chunks = [] as Chunk[]
-  const bins = reg2bins(s, e)
-  let k = 0
-  for (const [start, end] of bins) {
-    for (let bin = start; bin <= end; bin++) {
-      if (ba.binIndex[bin]) {
-        const binChunks = ba.binIndex[bin]
-        console.log({ binChunks, bin })
-        for (let c = 0; c < binChunks.length; ++c) {
-          k++
-          chunks.push(binChunks[c])
-        }
-      }
-    }
-  }
-  console.log({ k, bins })
-
-  // Use the linear index to find minimum file position of chunks that could
-  // contain alignments in the region
-  const nintv = ba.linearIndex.length
-  let lowest = null
-  const minLin = Math.min(s >> 14, nintv - 1)
-  const maxLin = Math.min(e >> 14, nintv - 1)
-  for (let i = minLin; i <= maxLin; ++i) {
-    const vp = ba.linearIndex[i]
-    if (vp) {
-      if (!lowest || vp.compareTo(lowest) < 0) {
-        lowest = vp
-      }
-    }
-  }
-
-  return optimizeChunks(chunks, lowest)
-}
+const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 
 function getLevel(b: number) {
   if (b === 0) {
@@ -87,6 +48,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
     for (let i = 0; i < 6; i++) {
       ctx.strokeRect(0, i * h, width, h)
     }
+    ctx.fillStyle = 'rgba(0,0,0,0.1)'
     for (const [key, val] of Object.entries(ba.binIndex)) {
       const b = +key
       const level = getLevel(b)
@@ -95,11 +57,31 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
         const len = maxVal - minVal
         const x1 = (c.minv.blockPosition - minVal) / len
         const x2 = (c.maxv.blockPosition - minVal) / len
-
-        ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 1), h)
+        ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 2), h)
       }
     }
-  }, [data, val, maxVal, minVal])
+
+    const [s, e] = loc.split('-') || []
+    if (s !== undefined && e !== undefined) {
+      const ba = bai.indices[chrToIndex[val]]
+      if (!ba) {
+        return
+      }
+      const sp = +s.replaceAll(',', '')
+      const ep = +e.replaceAll(',', '')
+
+      const chunks = getChunks(sp, ep, ba)
+      for (let i = 0; i < chunks.length; i++) {
+        const c = chunks[i]
+        const len = maxVal - minVal
+        const x1 = (c.minv.blockPosition - minVal) / len
+        const x2 = (c.maxv.blockPosition - minVal) / len
+        const level = getLevel(c.bin)
+        ctx.fillStyle = colors[level]
+        ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 2), h)
+      }
+    }
+  }, [data, val, loc, maxVal, minVal])
 
   useEffect(() => {
     const canvas = ref.current
@@ -114,10 +96,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
     const height = canvas.getBoundingClientRect().height
     canvas.width = width
     canvas.height = height
-
     ctx.clearRect(0, 0, width, height)
-    ctx.strokeStyle = 'black'
-    ctx.strokeRect(0, 0, width, height)
 
     const { bai, chrToIndex } = data
 
@@ -145,7 +124,7 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
         const level = getLevel(c.bin)
         totalPerBin[level] += size
         ctx.fillStyle = colors[level]
-        ctx.fillRect(x1 * width, 0, Math.max((x2 - x1) * width, 1), h)
+        ctx.fillRect(x1 * width, 0, Math.max((x2 - x1) * width, 2), h + 2)
       }
       setTotal(total)
       setMaxVal(maxVal)
@@ -154,27 +133,6 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
     }
   }, [data, loc, val])
 
-  const fmt = (n: number) => {
-    if (n > 1_000_000_000) {
-      return (
-        (n / 1_000_000_000).toLocaleString(undefined, {
-          maximumFractionDigits: 2,
-        }) + 'Gb'
-      )
-    } else if (n > 1_000_000) {
-      return (
-        (n / 1_000_000).toLocaleString(undefined, {
-          maximumFractionDigits: 2,
-        }) + 'Mb'
-      )
-    } else if (n > 1_000) {
-      return (
-        (n / 1_000).toLocaleString(undefined, {
-          maximumFractionDigits: 2,
-        }) + 'kb'
-      )
-    } else return n + 'bytes'
-  }
   return (
     <div>
       <h2>Request pattern for a given query</h2>
@@ -196,11 +154,40 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
           chromosome: {val} - occupies {fmt(minVal)} - {fmt(maxVal)} in file
           (bytes, not bp)
         </div>
-        <p>Block positions matched to coordinate query</p>
+        <p>
+          Block positions in file, filtered on coord query, colored by bin level
+        </p>
         <canvas ref={ref} style={{ width: '90%', height: h }} />
-        <p>Block positions per bin type (all, not filtered on coord query)</p>
+        <p>
+          Block positions in file, colored by bin level if included in coord
+          query (faded black otherwise)
+        </p>
         <canvas ref={ref2} style={{ width: '90%', height: h * 6 }} />
       </div>
+      <TotalsPerBin total={total} totalPerBin={totalPerBin} />
+
+      <p>
+        [1] You may observe in the above diagram that the requests are scattered
+        all over the file. In practice, we do not fetch all these blocks and
+        instead, fetch them one at a time. Remember the file is still coordinate
+        sorted, so we can fetch lower-byte ranges first, and then check if we
+        encounter an alignment in a given block that is beyond our requested
+        coordinate range, and if so, abort checking any further blocks. This is
+        noted in SAMv1.pdf Sec 5.1.1 p.2
+      </p>
+    </div>
+  )
+}
+
+function TotalsPerBin({
+  total,
+  totalPerBin,
+}: {
+  total: number
+  totalPerBin?: number[]
+}) {
+  return (
+    <>
       {totalPerBin ? (
         <div>
           <p>
@@ -231,15 +218,6 @@ export default function FileLayout({ data, val }: { data: any; val: string }) {
           </div>
         </div>
       ) : null}
-      <p>
-        [1] You may observe in the above diagram that the requests are scattered
-        all over the file. In practice, we do not fetch all these blocks and
-        instead, fetch them one at a time. Remember the file is still coordinate
-        sorted, so we can fetch lower-byte ranges first, and then check if we
-        encounter an alignment in a given block that is beyond our requested
-        coordinate range, and if so, abort checking any further blocks. This is
-        noted in SAMv1.pdf Sec 5.1.1 p.2
-      </p>
-    </div>
+    </>
   )
 }

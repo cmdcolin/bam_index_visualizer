@@ -99,3 +99,61 @@ export function optimizeChunks(chunks: Chunk[], lowest: VirtualOffset) {
 
   return mergedChunks
 }
+
+export function fmt(n: number) {
+  if (n > 1_000_000_000) {
+    return (
+      (n / 1_000_000_000).toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      }) + 'Gb'
+    )
+  } else if (n > 1_000_000) {
+    return (
+      (n / 1_000_000).toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      }) + 'Mb'
+    )
+  } else if (n > 1_000) {
+    return (
+      (n / 1_000).toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      }) + 'kb'
+    )
+  } else return n + 'bytes'
+}
+
+export function getChunks(s: number, e: number, ba: any) {
+  const chunks = [] as Chunk[]
+  const bins = reg2bins(s, e)
+  let k = 0
+  for (const [start, end] of bins) {
+    for (let bin = start; bin <= end; bin++) {
+      if (ba.binIndex[bin]) {
+        const binChunks = ba.binIndex[bin]
+        console.log({ binChunks, bin })
+        for (let c = 0; c < binChunks.length; ++c) {
+          k++
+          chunks.push(binChunks[c])
+        }
+      }
+    }
+  }
+  console.log({ k, bins })
+
+  // Use the linear index to find minimum file position of chunks that could
+  // contain alignments in the region
+  const nintv = ba.linearIndex.length
+  let lowest = null
+  const minLin = Math.min(s >> 14, nintv - 1)
+  const maxLin = Math.min(e >> 14, nintv - 1)
+  for (let i = minLin; i <= maxLin; ++i) {
+    const vp = ba.linearIndex[i]
+    if (vp) {
+      if (!lowest || vp.compareTo(lowest) < 0) {
+        lowest = vp
+      }
+    }
+  }
+
+  return optimizeChunks(chunks, lowest)
+}

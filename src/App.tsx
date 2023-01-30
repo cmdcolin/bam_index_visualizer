@@ -8,8 +8,6 @@ import FileLayout from './FileLayout'
 function DataViewer({ data }: { data: any }) {
   const { bai, chrToIndex, indexToChr } = data
   const [val, setVal] = useState(indexToChr[0].refName)
-  const [colorMode, setColorMode] = useState('zscore')
-
   return (
     <div>
       <label htmlFor="chr">Chromosome:</label>
@@ -24,18 +22,9 @@ function DataViewer({ data }: { data: any }) {
           </option>
         ))}
       </select>
-      <label htmlFor="color_mode">Color mode:</label>
-      <select
-        id="color_mode"
-        value={colorMode}
-        onChange={event => setColorMode(event.target.value)}
-      >
-        <option value={'zscore'}>Z-score</option>
-        <option value={'max'}>Max</option>
-      </select>
 
       <br />
-      <Graph bai={bai.indices[chrToIndex[val]]} colorMode={colorMode} />
+      <Graph bai={bai.indices[chrToIndex[val]]} />
 
       <FileLayout data={data} val={val} />
     </div>
