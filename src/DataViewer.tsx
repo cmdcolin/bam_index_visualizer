@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 // locals
 import Graph from './Graph'
@@ -9,6 +9,10 @@ export default function DataViewer({ data }: { data: any }) {
   const [chr, setChr] = useState(indexToChr[0].refName)
   const [maxVal, setMaxVal] = useState('')
   const [currPos, setCurrPos] = useState<[number, number]>()
+  useEffect(() => {
+    setChr(indexToChr[0].refName)
+  }, [chrToIndex, indexToChr, bai])
+
   return (
     <div>
       <label htmlFor="chr">Chromosome:</label>

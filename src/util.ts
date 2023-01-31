@@ -3,8 +3,7 @@ import VirtualOffset from './virtualOffset'
 
 export function sum(arr: number[]) {
   let sum = 0
-  let len = arr.length
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < arr.length; i++) {
     sum += arr[i]
   }
   return sum
@@ -12,18 +11,20 @@ export function sum(arr: number[]) {
 
 export function max(arr: number[]) {
   let max = -Infinity
-  let len = arr.length
-  for (let i = 0; i < len; i++) {
-    max = Math.max(max, arr[i])
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] > max) {
+      max = arr[i]
+    }
   }
   return max
 }
 
 export function min(arr: number[]) {
   let min = Infinity
-  let len = arr.length
-  for (let i = 0; i < len; i++) {
-    min = Math.min(min, arr[i])
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] < min) {
+      min = arr[i]
+    }
   }
   return min
 }

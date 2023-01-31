@@ -1,5 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react'
-import Chunk from './chunk'
+import React, { useRef, useState, useEffect, useMemo } from 'react'
 import { max, sum, fmt, fmt2 } from './util'
 
 function fillRect(
@@ -87,6 +86,16 @@ export default function Graph({
   const [width, setWidth] = useState(0)
 
   const c = 2 ** 29 / scale
+
+  const sizes = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(bai.binIndex).map(([key, val]) => [
+        key,
+        sum(val.map(f => f.fetchedSize())),
+      ]),
+    )
+  }, [bai])
+
   useEffect(() => {
     setCurrPos([(offset / width) * c, ((offset + width) / width) * c])
   }, [offset, width, c])
@@ -139,14 +148,7 @@ export default function Graph({
 
     const yunit = height / 6
     ctx.clearRect(0, 0, width, height)
-
-    const sizes = Object.fromEntries(
-      Object.entries(bai.binIndex).map(([key, val]) => [
-        key,
-        sum(val.map(f => f.fetchedSize())),
-      ]),
-    )
-    const scalar = maxVal ? +maxVal : max(Object.values(sizes))
+    const scalar = max(Object.values(sizes))
     const cb = (f: number) =>
       `hsl(${Math.min((f / scalar) * 100, 200)},50%,50%)`
 
@@ -247,7 +249,7 @@ export default function Graph({
     const res1 = ctx.measureText(str1)
     ctx.fillText(str1, width - 10 - res1.width, 10)
     ctx.fillText(str0, width - 10 - res0.width, 75)
-  }, [bai, maxVal, scale, offset])
+  }, [maxVal, scale, offset, sizes])
   useEffect(() => {
     const canvas = ref.current
     if (!canvas) {
