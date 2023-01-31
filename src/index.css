@@ -13,7 +13,7 @@ blockquote {
 }
 
 .splitter {
-  display: 'flex';
+  display: flex;
 }
 
 @media screen and (max-width: 800px) {
@@ -48,9 +48,7 @@ ul {
 label {
   margin: 10px;
 }
-.buttons {
-  margin: 20px;
-}
+
 .urlinput {
   width: 50%;
 }
@@ -61,4 +59,8 @@ label {
 }
 .rubberband:hover {
   background: #aaa;
+}
+
+.buttons button {
+  display: block;
 }

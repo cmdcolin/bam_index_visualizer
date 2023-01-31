@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import Chunk from './chunk'
 import VirtualOffset from './virtualOffset'
 
@@ -56,7 +57,11 @@ export function reg2bins(beg: number, end: number) {
   ]
 }
 
-export function canMergeBlocks(chunk1: Chunk, chunk2: Chunk) {
+export function canMergeBlocks(
+  chunk1: Chunk,
+  chunk2: Chunk,
+  dontMergeLarge: boolean,
+) {
   return (
     chunk2.minv.blockPosition - chunk1.maxv.blockPosition < 65000 &&
     chunk2.maxv.blockPosition - chunk1.minv.blockPosition < 5000000
@@ -67,6 +72,7 @@ export function optimizeChunks(
   chunks: Chunk[],
   lowest: VirtualOffset,
   dedupe: boolean,
+  dontMergeLarge: boolean,
 ) {
   const mergedChunks: Chunk[] = []
   let lastChunk: Chunk | null = null
@@ -90,7 +96,7 @@ export function optimizeChunks(
           mergedChunks.push(chunk)
           lastChunk = chunk
         } else {
-          if (canMergeBlocks(lastChunk, chunk)) {
+          if (canMergeBlocks(lastChunk, chunk, dontMergeLarge)) {
             if (chunk.maxv.compareTo(lastChunk.maxv) > 0) {
               lastChunk.maxv = chunk.maxv
             }
@@ -135,7 +141,13 @@ export function fmt2(n: number, fixed = 0) {
   } else return f(n, fixed) + 'bp'
 }
 
-export function getChunks(s: number, e: number, ba: any, optimize: boolean) {
+export function getChunks(
+  s: number,
+  e: number,
+  ba: any,
+  optimize: boolean,
+  dontMergeLarge: boolean,
+) {
   const chunks = [] as Chunk[]
   const bins = reg2bins(s, e)
   for (const [start, end] of bins) {
@@ -164,7 +176,23 @@ export function getChunks(s: number, e: number, ba: any, optimize: boolean) {
     }
   }
 
-  return optimizeChunks(chunks, lowest, optimize)
+  return optimizeChunks(chunks, lowest, optimize, dontMergeLarge)
 }
 
 export const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+
+export function useDebounce(value: any, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}

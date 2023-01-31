@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Chunk from './chunk'
 import { fmt } from './util'
 
@@ -20,6 +20,16 @@ export function Chunks({
     setStoppingPoint(0)
     setTotalFetched(0)
   }, [chunks, sp, ep])
+
+  const memod = useMemo(() => {
+    return chunks.map(c => ({
+      ...c,
+      fmt1: fmt(c.minv.blockPosition, 5),
+      fmt2: fmt(c.maxv.blockPosition, 5),
+      fmt3: fmt(c.fetchedSize(), 5),
+    }))
+  }, [chunks])
+
   return (
     <div>
       <h2>Requested block overview</h2>
@@ -66,6 +76,9 @@ export function Chunks({
         Fetch BAM records to find which blocks actually have overlapping
         features with query (note: can download large amounts of data)
       </button>
+      {ep - sp > 1_000_000 ? (
+        <p>WARNING: Large region selected. Might not wanna click the button</p>
+      ) : null}
       <p>
         Blocks to request for the requested region, ordered by the minimum file
         position in the file:
@@ -74,7 +87,7 @@ export function Chunks({
       {totalFetched ? <div>Total fetched: {fmt(totalFetched)}</div> : null}
       <div style={{ height: 400, overflow: 'auto' }}>
         <ul>
-          {chunks.map((c, idx) => (
+          {memod.slice(0, 200).map((c, idx) => (
             <li
               key={JSON.stringify(c) + '-' + idx}
               style={{
@@ -86,13 +99,18 @@ export function Chunks({
                     : undefined,
               }}
             >
-              bin number: {c.bin} - file offsets {fmt(c.minv.blockPosition)} -{' '}
-              {fmt(c.maxv.blockPosition)} (fetched size {fmt(c.fetchedSize())}){' '}
-              {idx < stoppingPoint
+              bin number: {c.bin} - file offsets {c.fmt1} - {c.fmt2} (fetched
+              size {c.fmt3}){' '}
+              {totalFetched === 0
+                ? ''
+                : idx < stoppingPoint
                 ? ' (Found features in this chunk)'
                 : ' (No features in this chunk)'}
             </li>
           ))}
+          {memod.length > 200 ? (
+            <div>...More than 200 chunks requested, just displaying 200</div>
+          ) : null}
         </ul>
       </div>
     </div>

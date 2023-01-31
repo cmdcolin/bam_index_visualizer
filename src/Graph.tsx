@@ -148,9 +148,9 @@ export default function Graph({
 
     const yunit = height / 6
     ctx.clearRect(0, 0, width, height)
-    const scalar = max(Object.values(sizes))
+    const scalar = maxVal !== '' ? +maxVal : max(Object.values(sizes))
     const cb = (f: number) =>
-      `hsl(${Math.min((f / scalar) * 100, 200)},50%,50%)`
+      `hsl(${Math.min((f / scalar) * 200, 200)},50%,50%)`
 
     let curr = 0
     drawRow({
@@ -232,11 +232,11 @@ export default function Graph({
     })
 
     var gradient = ctx.createLinearGradient(0, 0, 0, 75)
-    gradient.addColorStop(0, 'hsl(100,50%,50%)')
-    gradient.addColorStop(1 / 5, 'hsl(80,50%,50%)')
-    gradient.addColorStop(2 / 5, 'hsl(60,50%,50%)')
-    gradient.addColorStop(3 / 5, 'hsl(40,50%,50%)')
-    gradient.addColorStop(4 / 5, 'hsl(20,50%,50%)')
+    gradient.addColorStop(0, 'hsl(200,50%,50%)')
+    gradient.addColorStop(1 / 5, 'hsl(160,50%,50%)')
+    gradient.addColorStop(2 / 5, 'hsl(120,50%,50%)')
+    gradient.addColorStop(3 / 5, 'hsl(80,50%,50%)')
+    gradient.addColorStop(4 / 5, 'hsl(40,50%,50%)')
     gradient.addColorStop(1, 'hsl(0,50%,50%)')
 
     ctx.fillStyle = gradient
@@ -339,11 +339,6 @@ export default function Graph({
           }}
         />
       </div>
-      <p>
-        The above diagram shows the distribution of data in the bins from the
-        binning index from BAM index file for a particular chromosome. There are
-        multiple bin levels which can help hold larger elements in the BAM file.
-      </p>
     </div>
   )
 }

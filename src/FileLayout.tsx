@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react'
-import Chunk from './chunk'
 import { Chunks } from './Chunks'
 import { TotalsPerBin } from './TotalsPerBin'
 import { colors, fmt, getChunks, max, min } from './util'
@@ -35,8 +34,8 @@ export default function FileLayout({
   const ref2 = useRef<HTMLCanvasElement>(null)
   const [total, setTotal] = useState(0)
   const [optimize, setOptimize] = useState(true)
+  const [dontMergeLarge, setDontMergeLarge] = useState(false)
   const [totalPerBin, setTotalPerBin] = useState<number[]>()
-  const [sp, ep] = currPos
   const { minVal, maxVal } = useMemo(() => {
     const { bai, chrToIndex } = data
     const ba = bai.indices[chrToIndex[chr]]
@@ -45,14 +44,13 @@ export default function FileLayout({
     const minVal = min(bins.map(c => c.minv.blockPosition))
     return { minVal, maxVal }
   }, [data, chr])
+  const [sp, ep] = currPos
 
   const chunks = useMemo(() => {
     const { bai, chrToIndex } = data
     const ba = bai.indices[chrToIndex[chr]]
-    let chunks = [] as Chunk[]
-    chunks = getChunks(sp, ep, ba, optimize)
-    return chunks
-  }, [data, sp, ep, chr, optimize])
+    return getChunks(sp, ep, ba, optimize, dontMergeLarge)
+  }, [data, sp, ep, chr, optimize, dontMergeLarge])
 
   useEffect(() => {
     const canvas = ref2.current
@@ -70,6 +68,7 @@ export default function FileLayout({
     const height = canvas.getBoundingClientRect().height
     canvas.width = width
     canvas.height = height
+    console.log('t1')
     ctx.clearRect(0, 0, width, height)
     for (let i = 0; i < 6; i++) {
       ctx.strokeRect(0, i * h, width, h)
@@ -144,28 +143,31 @@ export default function FileLayout({
     <div>
       <h2>Request pattern for a given query</h2>
       <div>
-        <label htmlFor="optimize">
-          Optimize/de-duplicate overlapping chunks?
-        </label>
-        <input
-          id="optimize"
-          type="checkbox"
-          checked={optimize}
-          onChange={event => setOptimize(event.target.checked)}
-        />
+        <div>
+          <label htmlFor="optimize">
+            Optimize/de-duplicate overlapping chunks?
+          </label>
+          <input
+            id="optimize"
+            type="checkbox"
+            checked={optimize}
+            onChange={event => setOptimize(event.target.checked)}
+          />
+        </div>
       </div>
-
+      <p>
+        Block positions for query, colored by bin level, and split into the
+        different "bin levels" with all bins marked but colored ones are
+        included in query. Note: The colors/bin levels are basically arbitrary
+        once optimizing is on, because a block can start in any one of the bins,
+        and get merged with any other bin.
+      </p>
       <div style={{ margin: 10 }}>
-        <div style={{ textAlign: 'center', margin: 20 }}>
+        <div style={{ textAlign: 'center' }}>
           chromosome: {chr} - occupies {fmt(minVal)} - {fmt(maxVal)} in file
           (bytes, not bp)
         </div>
-        <p>Block positions for query, colored by bin level</p>
         <canvas ref={ref} style={{ width: '90%', height: h }} />
-        <p>
-          Block positions, colored by bin level if included in query (faded
-          black otherwise)
-        </p>
         <canvas ref={ref2} style={{ width: '90%', height: h * 6 }} />
       </div>
       <TotalsPerBin total={total} totalPerBin={totalPerBin} />
@@ -178,7 +180,14 @@ export default function FileLayout({
         sorted, so we can fetch lower-byte ranges first, and then check if we
         encounter an alignment in a given block that is beyond our requested
         coordinate range, and if so, abort checking any further blocks. This is
-        noted in SAMv1.pdf Sec 5.1.1 p.2
+        noted in SAMv1.pdf Sec 5.1.1 p.2.
+      </p>
+      <p>
+        [2] In genome browsers on the web, we sometimes avoid merging too many
+        BAI blocks into a single large block, because unzipping this block would
+        unzip to a very large memory buffer, and we do not have streaming
+        unzipping of the block data. Breaking them up is kind of like a little
+        form of 'streaming'
       </p>
     </div>
   )

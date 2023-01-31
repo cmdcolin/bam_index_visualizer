@@ -30,6 +30,7 @@ function App() {
   const [data, setData] = useState<any>()
   const [error, setError] = useState<unknown>()
   const [counter, setCounter] = useState(0)
+  const [hideHelp, setHideHelp] = useState(true)
 
   const n0 = bamLocal.current?.files?.[0]
   const n1 = baiLocal.current?.files?.[0]
@@ -76,60 +77,99 @@ function App() {
     <div className="App">
       <div>
         <h2>BAM index visualizer</h2>
+        <button onClick={() => setHideHelp(!hideHelp)}>
+          {hideHelp ? 'Show help' : 'Hide help'}
+        </button>
         <p>
           This is a project that helps visualize the structure of the bin index
-          of BAM index (BAI) files
+          of BAM index (BAI) files.
         </p>
-        <div className="splitter">
-          <div className="form">
-            <fieldset>
-              <legend>Open file:</legend>
+        {!hideHelp ? (
+          <>
+            <h4>What is a BAI file</h4>
+            <p>
+              The BAI (BAM index) allows users to download only the data that is
+              needed for a particular query e.g. chr1:1-100 from a BAM file. The
+              BAI is significantly smaller than a BAM and is read into memory.
+              It contains bins, which themselves contain one of more "start and
+              end" pointers to where in the BAM file to look for the reads for
+              your query. This program will show you what this bin structure
+              looks like in a given BAI file.
+            </p>
+            <p>
+              The first chart below shows the 512Mbp overview. This is because
+              the bins for the BAI cannot address chromosomes larger than 512Mb,
+              and so this graph shows this "total overview". Bins are colored by
+              how much data are them scaled against the largest bin. You can
+              also click and drag the grey bar above the view to "zoom in" or
+              side scroll the canvas.
+            </p>
+            <p>
+              The second chart shows an overview of the byte ranges that would
+              be requested from the BAM, and it is responsive to zooming in and
+              out on the first chart.
+            </p>
+            <p>
+              The third chart/table is the actual textual representation of
+              which bins are being requested, and if you click the button, it
+              will actually go and fetch the data from the BAM file, which will
+              also demonstrate the short-circuiting action because not all the
+              bins have to be requested: the program can stop once it finds a
+              read in the BAM file that is beyond the genomic coordinate range
+              being requested (also responsive to zooming in on the first chart)
+            </p>
+          </>
+        ) : null}
+        <div className="form">
+          <fieldset>
+            <legend>Open file:</legend>
 
-              <div>
-                <input
-                  type="radio"
-                  id="local"
-                  name="local"
-                  value="local"
-                  checked={useLocal}
-                  onChange={() => setUseLocal(true)}
-                />
-                <label htmlFor="local">Local files</label>
-              </div>
+            <div>
+              <input
+                type="radio"
+                id="local"
+                name="local"
+                value="local"
+                checked={useLocal}
+                onChange={() => setUseLocal(true)}
+              />
+              <label htmlFor="local">Local files</label>
+            </div>
 
+            <div>
+              <input
+                type="radio"
+                id="url"
+                value="url"
+                onChange={() => setUseLocal(false)}
+                checked={!useLocal}
+              />
+              <label htmlFor="url"> URLs</label>
+            </div>
+            {useLocal ? (
               <div>
-                <input
-                  type="radio"
-                  id="url"
-                  value="url"
-                  onChange={() => setUseLocal(false)}
-                  checked={!useLocal}
-                />
-                <label htmlFor="url"> URLs</label>
-              </div>
-              {useLocal ? (
                 <div>
-                  <div>
-                    <label htmlFor="bam_local">BAM</label>
-                    <input
-                      id="bam_local"
-                      type="file"
-                      ref={bamLocal}
-                      onChange={() => setCounter(counter + 1)}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="bai_local">BAI</label>
-                    <input
-                      id="bai_local"
-                      type="file"
-                      ref={baiLocal}
-                      onChange={() => setCounter(counter + 1)}
-                    />
-                  </div>
+                  <label htmlFor="bam_local">BAM</label>
+                  <input
+                    id="bam_local"
+                    type="file"
+                    ref={bamLocal}
+                    onChange={() => setCounter(counter + 1)}
+                  />
                 </div>
-              ) : (
-                <>
+                <div>
+                  <label htmlFor="bai_local">BAI</label>
+                  <input
+                    id="bai_local"
+                    type="file"
+                    ref={baiLocal}
+                    onChange={() => setCounter(counter + 1)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="splitter">
+                <div>
                   <div>
                     <label htmlFor="url">BAM URL: </label>
                     <input
@@ -150,61 +190,62 @@ function App() {
                       onChange={event => setBaiUrl(event.target.value)}
                     />
                   </div>
-                  <div className="buttons">
-                    <div>Example files:</div>
-                    <button
-                      onClick={() => {
-                        setBamUrl(nanopore)
-                        setBaiUrl(nanopore + '.bai')
-                      }}
-                    >
-                      Nanopore ultralong (hg19, 60Mb BAI)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setBamUrl(pacbio)
-                        setBaiUrl(pacbio + '.bai')
-                      }}
-                    >
-                      PacBio CLR reads (hg19, 100Mb BAI)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setBamUrl(pacbio2)
-                        setBaiUrl(pacbio2 + '.bai')
-                      }}
-                    >
-                      PacBio HiFi reads (hg19, 2Mb BAI)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setBamUrl(illumina)
-                        setBaiUrl(illumina + '.bai')
-                      }}
-                    >
-                      Illumina reads (hg19, 9Mb BAI)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setBamUrl(isoseq)
-                        setBaiUrl(isoseq + '.bai')
-                      }}
-                    >
-                      PacBio IsoSeq (hg19, 1.5Mb BAI)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setBamUrl(sarscov2)
-                        setBaiUrl(sarscov2 + '.bai')
-                      }}
-                    >
-                      SARS-CoV2 (4kb BAI)
-                    </button>
-                  </div>
-                </>
-              )}
-            </fieldset>
-          </div>
+                </div>
+                <div className="buttons">
+                  <div>Example files:</div>
+                  <button
+                    onClick={() => {
+                      setBamUrl(nanopore)
+                      setBaiUrl(nanopore + '.bai')
+                    }}
+                  >
+                    Nanopore ultralong (hg19, 60Mb BAI)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBamUrl(pacbio)
+                      setBaiUrl(pacbio + '.bai')
+                    }}
+                  >
+                    PacBio CLR reads (hg19, 100Mb BAI)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBamUrl(pacbio2)
+                      setBaiUrl(pacbio2 + '.bai')
+                    }}
+                  >
+                    PacBio HiFi reads (hg19, 2Mb BAI)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBamUrl(illumina)
+                      setBaiUrl(illumina + '.bai')
+                    }}
+                  >
+                    Illumina reads (hg19, 9Mb BAI)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBamUrl(isoseq)
+                      setBaiUrl(isoseq + '.bai')
+                    }}
+                  >
+                    PacBio IsoSeq (hg19, 1.5Mb BAI)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBamUrl(sarscov2)
+                      setBaiUrl(sarscov2 + '.bai')
+                    }}
+                  >
+                    SARS-CoV2 (4kb BAI, all data is in basically a single BAI
+                    bin, zoom in on left)
+                  </button>
+                </div>
+              </div>
+            )}
+          </fieldset>
         </div>
       </div>
       {error ? (
@@ -216,6 +257,7 @@ function App() {
       ) : (
         <DataViewer data={data} />
       )}
+      <a href="https://github.com/cmdcolin/bam_index_visualizer">Github</a>
     </div>
   )
 }
