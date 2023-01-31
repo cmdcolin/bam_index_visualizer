@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
+import { BlobFile } from 'generic-filehandle'
 import { BamFile } from '@gmod/bam'
 
 // locals
@@ -66,14 +67,34 @@ const sarscov2 =
 function App() {
   const [bamUrl, setBamUrl] = useState(illumina)
   const [baiUrl, setBaiUrl] = useState(illumina + '.bai')
+  const bamLocal = useRef<HTMLInputElement>(null)
+  const baiLocal = useRef<HTMLInputElement>(null)
+  const [useLocal, setUseLocal] = useState(false)
   const [data, setData] = useState<any>()
   const [error, setError] = useState<unknown>()
+  const [counter, setCounter] = useState(0)
+
   useEffect(() => {
     ;(async () => {
       try {
         setError(undefined)
         setData(undefined)
-        const bam = new BamFile({ bamUrl, baiUrl })
+
+        let bam
+        if (useLocal) {
+          const n0 = bamLocal.current?.files?.[0]
+          const n1 = baiLocal.current?.files?.[0]
+          if (n0 && n1) {
+            bam = new BamFile({
+              bamFilehandle: new BlobFile(n0),
+              baiFilehandle: new BlobFile(n1),
+            })
+          } else {
+            return
+          }
+        } else {
+          bam = new BamFile({ bamUrl, baiUrl })
+        }
         const header = await bam.getHeader()
         // @ts-ignore
         const indexToChr = bam.indexToChr
@@ -88,7 +109,8 @@ function App() {
         console.error(e)
       }
     })()
-  }, [bamUrl, baiUrl])
+  }, [bamUrl, baiUrl, counter])
+
   return (
     <div className="App">
       <div>
@@ -99,26 +121,80 @@ function App() {
         </p>
         <div className="splitter">
           <div className="form">
-            <div>
-              <label htmlFor="url">BAM URL: </label>
-              <input
-                id="bam"
-                type="text"
-                className="urlinput"
-                value={bamUrl}
-                onChange={event => setBamUrl(event.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="url">BAI URL: </label>
-              <input
-                id="bai"
-                type="text"
-                className="urlinput"
-                value={baiUrl}
-                onChange={event => setBaiUrl(event.target.value)}
-              />
-            </div>
+            <fieldset>
+              <legend>Open file:</legend>
+
+              <div>
+                <input
+                  type="radio"
+                  id="local"
+                  name="local"
+                  value="local"
+                  checked={useLocal}
+                  onChange={() => {
+                    console.log('t1')
+                    setUseLocal(true)
+                  }}
+                />
+                <label htmlFor="local">Local files</label>
+              </div>
+
+              <div>
+                <input
+                  type="radio"
+                  id="url"
+                  value="url"
+                  onChange={() => setUseLocal(false)}
+                  checked={!useLocal}
+                />
+                <label htmlFor="url"> URLs</label>
+              </div>
+              {useLocal ? (
+                <div>
+                  <div>
+                    <label htmlFor="bam_local">BAM</label>
+                    <input
+                      id="bam_local"
+                      type="file"
+                      ref={bamLocal}
+                      onChange={() => setCounter(counter + 1)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="bai_local">BAI</label>
+                    <input
+                      id="bai_local"
+                      type="file"
+                      ref={baiLocal}
+                      onChange={() => setCounter(counter + 1)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="url">BAM URL: </label>
+                    <input
+                      id="bam"
+                      type="text"
+                      className="urlinput"
+                      value={bamUrl}
+                      onChange={event => setBamUrl(event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="url">BAI URL: </label>
+                    <input
+                      id="bai"
+                      type="text"
+                      className="urlinput"
+                      value={baiUrl}
+                      onChange={event => setBaiUrl(event.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+            </fieldset>
           </div>
           <div className="buttons">
             <div>Example files:</div>
