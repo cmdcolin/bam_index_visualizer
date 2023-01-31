@@ -97,7 +97,10 @@ export default function Graph({
   }, [bai])
 
   useEffect(() => {
-    setCurrPos([(offset / width) * c, ((offset + width) / width) * c])
+    setCurrPos([
+      Math.max(0, (offset / width) * c),
+      Math.max(0, ((offset + width) / width) * c),
+    ])
   }, [offset, width, c])
 
   useEffect(() => {
