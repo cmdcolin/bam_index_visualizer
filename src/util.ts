@@ -130,14 +130,14 @@ function f(n: number, fixed = 0) {
   })
 }
 
-export function fmt2(n: number, fixed = 0) {
-  n = Math.min(Math.max(0, n), 2 ** 29)
-  if (n > 1024 * 1024 * 1024) {
-    return f(n / (1024 * 1024 * 1024), fixed) + 'Gbp'
-  } else if (n > 1024 * 1024) {
-    return f(n / (1024 * 1024), fixed) + 'Mbp'
-  } else if (n > 1024) {
-    return f(n / 1024, fixed) + 'kbp'
+export function fmt2(n: number, fixed = 1) {
+  n = Math.min(Math.max(0, n), 2 ** 29 - 1)
+  if (n > 1000 * 1000 * 1000) {
+    return f(n / (1000 * 1000 * 1000), fixed) + 'Gbp'
+  } else if (n > 1000 * 1000) {
+    return f(n / (1000 * 1000), fixed) + 'Mbp'
+  } else if (n > 1000) {
+    return f(n / 1000, fixed) + 'kbp'
   } else return f(n, fixed) + 'bp'
 }
 

@@ -336,7 +336,7 @@ export default function Graph({
           ref={ref}
           style={{ width: '90%', height: 200 }}
           onWheel={event => {
-            if (Math.abs(event.deltaX) > event.deltaY) {
+            if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
               setOffset(offset + event.deltaX)
             }
           }}

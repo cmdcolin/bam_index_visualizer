@@ -97,12 +97,12 @@ function App() {
               looks like in a given BAI file.
             </p>
             <p>
-              The first chart below shows the 512Mbp overview. This is because
-              the bins for the BAI cannot address chromosomes larger than 512Mb,
-              and so this graph shows this "total overview". Bins are colored by
-              how much data are them scaled against the largest bin. You can
-              also click and drag the grey bar above the view to "zoom in" or
-              side scroll the canvas.
+              The first chart below shows the 536Mbp overview. This is because
+              the bins for the BAI cannot address chromosomes larger than 536Mbp
+              (2^29-1), and so this graph shows this "total overview". Bins are
+              colored by how much data are in them scaled against the largest
+              bin. You can also click and drag the grey bar above the view to
+              "zoom in" or side scroll the canvas.
             </p>
             <p>
               The second chart shows an overview of the byte ranges that would

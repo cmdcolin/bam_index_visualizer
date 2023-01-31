@@ -180,7 +180,10 @@ export default function FileLayout({
         sorted, so we can fetch lower-byte ranges first, and then check if we
         encounter an alignment in a given block that is beyond our requested
         coordinate range, and if so, abort checking any further blocks. This is
-        noted in SAMv1.pdf Sec 5.1.1 p.2.
+        noted in SAMv1.pdf Sec 5.1.1 p.2. Also note that the "optimize routine"
+        can use the linear index to find bins from the bin index that are less
+        than the query range, hence, clicking this box you'll see boxes to the
+        left disappear.
       </p>
       <p>
         [2] In genome browsers on the web, we sometimes avoid merging too many
