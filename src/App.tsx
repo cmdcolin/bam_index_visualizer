@@ -1,50 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { BlobFile } from 'generic-filehandle'
 import { BamFile } from '@gmod/bam'
-
-// locals
-import Graph from './Graph'
-import FileLayout from './FileLayout'
-
-function DataViewer({ data }: { data: any }) {
-  const { bai, chrToIndex, indexToChr } = data
-  const [chr, setChr] = useState(indexToChr[0].refName)
-  const [maxVal, setMaxVal] = useState('')
-  const [currPos, setCurrPos] = useState<[number, number]>()
-  return (
-    <div>
-      <label htmlFor="chr">Chromosome:</label>
-      <select
-        id="chr"
-        value={chr}
-        onChange={event => setChr(event.target.value)}
-      >
-        {indexToChr.map((name: { refName: string }) => (
-          <option key={name.refName} value={name.refName}>
-            {name.refName}
-          </option>
-        ))}
-      </select>
-
-      <label htmlFor="maxval">Set color scale maximum on graph (bytes):</label>
-      <input
-        id="maxval"
-        type="text"
-        value={maxVal}
-        onChange={event => setMaxVal(event.target.value)}
-      />
-
-      <br />
-      <Graph
-        bai={bai.indices[chrToIndex[chr]]}
-        maxVal={maxVal}
-        setCurrPos={setCurrPos}
-      />
-
-      {currPos ? <FileLayout data={data} chr={chr} currPos={currPos} /> : null}
-    </div>
-  )
-}
+import DataViewer from './DataViewer'
 
 const nanopore =
   'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/ultra-long-ont_hs37d5_phased.bam'
@@ -73,6 +30,10 @@ function App() {
   const [data, setData] = useState<any>()
   const [error, setError] = useState<unknown>()
   const [counter, setCounter] = useState(0)
+
+  const n0 = bamLocal.current?.files?.[0]
+  const n1 = baiLocal.current?.files?.[0]
+  const localsLoaded = n0 && n1
 
   useEffect(() => {
     ;(async () => {
@@ -109,7 +70,7 @@ function App() {
         console.error(e)
       }
     })()
-  }, [bamUrl, baiUrl, counter])
+  }, [bamUrl, baiUrl, counter, useLocal])
 
   return (
     <div className="App">
@@ -131,10 +92,7 @@ function App() {
                   name="local"
                   value="local"
                   checked={useLocal}
-                  onChange={() => {
-                    console.log('t1')
-                    setUseLocal(true)
-                  }}
+                  onChange={() => setUseLocal(true)}
                 />
                 <label htmlFor="local">Local files</label>
               </div>
@@ -192,67 +150,69 @@ function App() {
                       onChange={event => setBaiUrl(event.target.value)}
                     />
                   </div>
+                  <div className="buttons">
+                    <div>Example files:</div>
+                    <button
+                      onClick={() => {
+                        setBamUrl(nanopore)
+                        setBaiUrl(nanopore + '.bai')
+                      }}
+                    >
+                      Nanopore ultralong (hg19, 60Mb BAI)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBamUrl(pacbio)
+                        setBaiUrl(pacbio + '.bai')
+                      }}
+                    >
+                      PacBio CLR reads (hg19, 100Mb BAI)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBamUrl(pacbio2)
+                        setBaiUrl(pacbio2 + '.bai')
+                      }}
+                    >
+                      PacBio HiFi reads (hg19, 2Mb BAI)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBamUrl(illumina)
+                        setBaiUrl(illumina + '.bai')
+                      }}
+                    >
+                      Illumina reads (hg19, 9Mb BAI)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBamUrl(isoseq)
+                        setBaiUrl(isoseq + '.bai')
+                      }}
+                    >
+                      PacBio IsoSeq (hg19, 1.5Mb BAI)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBamUrl(sarscov2)
+                        setBaiUrl(sarscov2 + '.bai')
+                      }}
+                    >
+                      SARS-CoV2 (4kb BAI)
+                    </button>
+                  </div>
                 </>
               )}
             </fieldset>
-          </div>
-          <div className="buttons">
-            <div>Example files:</div>
-            <button
-              onClick={() => {
-                setBamUrl(nanopore)
-                setBaiUrl(nanopore + '.bai')
-              }}
-            >
-              Nanopore ultralong (hg19, 60Mb BAI)
-            </button>
-            <button
-              onClick={() => {
-                setBamUrl(pacbio)
-                setBaiUrl(pacbio + '.bai')
-              }}
-            >
-              PacBio CLR reads (hg19, 100Mb BAI)
-            </button>
-            <button
-              onClick={() => {
-                setBamUrl(pacbio2)
-                setBaiUrl(pacbio2 + '.bai')
-              }}
-            >
-              PacBio HiFi reads (hg19, 2Mb BAI)
-            </button>
-            <button
-              onClick={() => {
-                setBamUrl(illumina)
-                setBaiUrl(illumina + '.bai')
-              }}
-            >
-              Illumina reads (hg19, 9Mb BAI)
-            </button>
-            <button
-              onClick={() => {
-                setBamUrl(isoseq)
-                setBaiUrl(isoseq + '.bai')
-              }}
-            >
-              PacBio IsoSeq (hg19, 1.5Mb BAI)
-            </button>
-            <button
-              onClick={() => {
-                setBamUrl(sarscov2)
-                setBaiUrl(sarscov2 + '.bai')
-              }}
-            >
-              SARS-CoV2 (4kb BAI)
-            </button>
           </div>
         </div>
       </div>
       {error ? (
         <div style={{ color: 'red' }}>{`${error}`}</div>
       ) : !data ? (
-        <div>Loading...</div>
+        <div>
+          {useLocal ? (localsLoaded ? 'Loading...' : '') : 'Loading...'}
+        </div>
       ) : (
         <DataViewer data={data} />
       )}
