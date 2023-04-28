@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react'
 // locals
 import Graph from './Graph'
 import FileLayout from './FileLayout'
+import { BamData } from './util'
 
-export default function DataViewer({ data }: { data: any }) {
+export default function DataViewer({ data }: { data: BamData }) {
   const { bai, chrToIndex, indexToChr } = data
   const [chr, setChr] = useState(indexToChr[0].refName)
   const [maxVal, setMaxVal] = useState('')

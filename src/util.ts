@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Chunk from './chunk'
 import VirtualOffset from './virtualOffset'
+import { BAI, BamFile } from '@gmod/bam'
 
 export function sum(arr: number[]) {
   let sum = 0
@@ -195,4 +196,15 @@ export function useDebounce(value: any, delay: number) {
   }, [value, delay])
 
   return debouncedValue
+}
+
+export interface BamData {
+  bam: BamFile
+  bai: Awaited<ReturnType<BAI['parse']>>
+  indexToChr: {
+    refName: string
+    length: number
+  }[]
+  chrToIndex: Record<string, number>
+  header: unknown
 }

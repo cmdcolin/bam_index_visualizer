@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react'
 import { max, sum, fmt, fmt2 } from './util'
+import { BAI } from '@gmod/bam'
 
 function fillRect(
   ctx: CanvasRenderingContext2D,
@@ -74,7 +75,7 @@ export default function Graph({
   maxVal,
   setCurrPos,
 }: {
-  bai: any
+  bai: Awaited<ReturnType<BAI['parse']>>['indices'][0]
   maxVal: string
   setCurrPos: (arg: [number, number]) => void
 }) {

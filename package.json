@@ -1,5 +1,6 @@
 {
   "name": "bam_index_visualizer",
+  "license": "MIT",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
@@ -9,17 +10,19 @@
     "postdeploy": "git push"
   },
   "dependencies": {
-    "@gmod/bam": "^1.1.18",
+    "@gmod/bam": "^2.0.0",
+    "@types/long": "^5.0.0",
+    "@types/node": "^20.3.3",
     "buffer": "^6.0.3",
     "gh-pages": "^5.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.27",
-    "@types/react-dom": "^18.0.10",
-    "@vitejs/plugin-react": "^3.0.0",
-    "typescript": "^4.1.2",
-    "vite": "^4.0.0"
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@vitejs/plugin-react": "^4.0.1",
+    "typescript": "^5.1.6",
+    "vite": "^4.3.9"
   }
 }

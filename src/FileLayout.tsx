@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react'
 import { Chunks } from './Chunks'
 import { TotalsPerBin } from './TotalsPerBin'
-import { colors, fmt, getChunks, max, min } from './util'
+import { BamData, colors, fmt, getChunks, max, min } from './util'
 
 function getLevel(b: number) {
   if (b === 0) {
@@ -26,7 +26,7 @@ export default function FileLayout({
   chr,
   currPos,
 }: {
-  data: any
+  data: BamData
   chr: string
   currPos: [number, number]
 }) {

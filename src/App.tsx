@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { BlobFile } from 'generic-filehandle'
-import { BamFile } from '@gmod/bam'
+import { BamFile, BAI } from '@gmod/bam'
 import DataViewer from './DataViewer'
+import { BamData } from './util'
 
 const nanopore =
   'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/ultra-long-ont_hs37d5_phased.bam'
@@ -27,7 +28,7 @@ function App() {
   const bamLocal = useRef<HTMLInputElement>(null)
   const baiLocal = useRef<HTMLInputElement>(null)
   const [useLocal, setUseLocal] = useState(false)
-  const [data, setData] = useState<any>()
+  const [data, setData] = useState<BamData>()
   const [error, setError] = useState<unknown>()
   const [counter, setCounter] = useState(0)
   const [hideHelp, setHideHelp] = useState(true)
@@ -58,14 +59,15 @@ function App() {
           bam = new BamFile({ bamUrl, baiUrl })
         }
         const header = await bam.getHeader()
-        // @ts-ignore
         const indexToChr = bam.indexToChr
-        // @ts-ignore
         const chrToIndex = bam.chrToIndex
 
-        // @ts-ignore
-        const bai = await bam.index.parse()
-        setData({ bam, indexToChr, chrToIndex, bai, header })
+        if (bam.index && indexToChr && chrToIndex && header) {
+          const bai = await bam.index.parse()
+          if ('bai' in bai && bai.bai) {
+            setData({ bam, indexToChr, chrToIndex, bai, header })
+          }
+        }
       } catch (e) {
         setError(e)
         console.error(e)
