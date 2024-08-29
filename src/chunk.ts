@@ -1,4 +1,4 @@
-import VirtualOffset from './virtualOffset'
+import type VirtualOffset from './virtualOffset'
 
 // little class representing a chunk in the index
 export default class Chunk {
@@ -18,5 +18,8 @@ export default class Chunk {
 
   fetchedSize() {
     return this.maxv.blockPosition - this.minv.blockPosition
+  }
+  toUniqueString() {
+    return `${Math.random()}`
   }
 }

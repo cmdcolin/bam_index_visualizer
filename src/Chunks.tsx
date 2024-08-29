@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import Chunk from './chunk'
+import type Chunk from './chunk'
 import { fmt } from './util'
+import type { BamFile } from '@gmod/bam'
 
 export function Chunks({
   context,
   chunks,
   currPos,
 }: {
-  context: any
+  context: { bam: BamFile }
   chunks: Chunk[]
   currPos: [number, number]
 }) {
@@ -34,43 +35,46 @@ export function Chunks({
     <div>
       <h2>Requested block overview</h2>
       <button
-        onClick={async () => {
-          setLoading(true)
-          const { bam } = context
-          let stoppingPoint = 0
-          let i = 0
-          let totalFetched = 0
-          for (const chunk of chunks) {
-            setCurrChunk(i++)
-            const { data, cpositions, dpositions } = await bam._readChunk({
-              chunk,
-            })
-            const records = await bam.readBamFeatures(
-              data,
-              cpositions,
-              dpositions,
-              chunk,
-            )
-            totalFetched += chunk.fetchedSize()
+        onClick={() => {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          ;(async () => {
+            setLoading(true)
+            const { bam } = context
+            let stoppingPoint = 0
+            let i = 0
+            let totalFetched = 0
+            for (const chunk of chunks) {
+              setCurrChunk(i++)
+              const { data, cpositions, dpositions } = await bam._readChunk({
+                chunk,
+                opts: {},
+              })
+              const records = await bam.readBamFeatures(
+                data,
+                cpositions,
+                dpositions,
+                chunk,
+              )
+              totalFetched += chunk.fetchedSize()
 
-            let done = false
-            for (let i = 0; i < records.length; i += 1) {
-              const feature = records[i]
-              if (feature.get('start') >= ep) {
-                done = true
+              let done = false
+              for (const feature of records) {
+                if (feature.get('start') >= ep) {
+                  done = true
+                  break
+                }
+              }
+
+              if (done) {
+                setStoppingPoint(stoppingPoint + 1)
+                setTotalFetched(totalFetched)
                 break
+              } else {
+                stoppingPoint++
               }
             }
-
-            if (done) {
-              setStoppingPoint(stoppingPoint + 1)
-              setTotalFetched(totalFetched)
-              break
-            } else {
-              stoppingPoint++
-            }
-          }
-          setLoading(false)
+            setLoading(false)
+          })()
         }}
       >
         Fetch BAM records to find which blocks actually have overlapping
@@ -89,14 +93,14 @@ export function Chunks({
         <ul>
           {memod.slice(0, 200).map((c, idx) => (
             <li
-              key={JSON.stringify(c) + '-' + idx}
+              key={`${JSON.stringify(c)}-${idx}`}
               style={{
                 background:
-                  totalFetched !== 0
-                    ? idx < stoppingPoint
+                  totalFetched === 0
+                    ? undefined
+                    : idx < stoppingPoint
                       ? '#0a03'
-                      : '#a003'
-                    : undefined,
+                      : '#a003',
               }}
             >
               bin number: {c.bin} - file offsets {c.fmt1} - {c.fmt2} (fetched
@@ -104,8 +108,8 @@ export function Chunks({
               {totalFetched === 0
                 ? ''
                 : idx < stoppingPoint
-                ? ' (Found features in this chunk)'
-                : ' (No features in this chunk)'}
+                  ? ' (Found features in this chunk)'
+                  : ' (No features in this chunk)'}
             </li>
           ))}
           {memod.length > 200 ? (

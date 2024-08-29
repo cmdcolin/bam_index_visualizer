@@ -6,6 +6,4 @@ import './index.css'
 
 globalThis.Buffer = Buffer
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <App />,
-)
+ReactDOM.createRoot(document.querySelector('#root')!).render(<App />)

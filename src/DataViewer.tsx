@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 // locals
 import Graph from './Graph'
 import FileLayout from './FileLayout'
-import { BamData } from './util'
+import type { BamData } from './util'
 
 export default function DataViewer({ data }: { data: BamData }) {
   const { bai, chrToIndex, indexToChr } = data
@@ -20,7 +20,9 @@ export default function DataViewer({ data }: { data: BamData }) {
       <select
         id="chr"
         value={chr}
-        onChange={event => setChr(event.target.value)}
+        onChange={event => {
+          setChr(event.target.value)
+        }}
       >
         {indexToChr.map((name: { refName: string }) => (
           <option key={name.refName} value={name.refName}>
@@ -34,7 +36,9 @@ export default function DataViewer({ data }: { data: BamData }) {
         id="maxval"
         type="text"
         value={maxVal}
-        onChange={event => setMaxVal(event.target.value)}
+        onChange={event => {
+          setMaxVal(event.target.value)
+        }}
       />
 
       <br />

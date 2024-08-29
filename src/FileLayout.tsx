@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react'
 import { Chunks } from './Chunks'
 import { TotalsPerBin } from './TotalsPerBin'
-import { BamData, colors, fmt, getChunks, max, min } from './util'
+import { type BamData, colors, fmt, getChunks, max, min } from './util'
 
 function getLevel(b: number) {
   if (b === 0) {
@@ -34,7 +34,6 @@ export default function FileLayout({
   const ref2 = useRef<HTMLCanvasElement>(null)
   const [total, setTotal] = useState(0)
   const [optimize, setOptimize] = useState(true)
-  const [dontMergeLarge, setDontMergeLarge] = useState(false)
   const [totalPerBin, setTotalPerBin] = useState<number[]>()
   const { minVal, maxVal } = useMemo(() => {
     const { bai, chrToIndex } = data
@@ -49,8 +48,8 @@ export default function FileLayout({
   const chunks = useMemo(() => {
     const { bai, chrToIndex } = data
     const ba = bai.indices[chrToIndex[chr]]
-    return getChunks(sp, ep, ba, optimize, dontMergeLarge)
-  }, [data, sp, ep, chr, optimize, dontMergeLarge])
+    return getChunks(sp, ep, ba, optimize)
+  }, [data, sp, ep, chr, optimize])
 
   useEffect(() => {
     const canvas = ref2.current
@@ -68,23 +67,21 @@ export default function FileLayout({
     const height = canvas.getBoundingClientRect().height
     canvas.width = width
     canvas.height = height
-    console.log('t1')
     ctx.clearRect(0, 0, width, height)
     for (let i = 0; i < 6; i++) {
       ctx.strokeRect(0, i * h, width, h)
     }
     ctx.fillStyle = 'rgba(0,0,0,0.1)'
-    let lastPx = -Infinity
+    let lastPx = Number.NEGATIVE_INFINITY
     let lastCount = 0
     for (const [key, val] of Object.entries(ba.binIndex)) {
       const b = +key
       const level = getLevel(b)
-      for (let i = 0; i < val.length; i++) {
-        const c = val[i]
+      for (const c of val) {
         const len = maxVal - minVal
         const x1 = (c.minv.blockPosition - minVal) / len
         const x2 = (c.maxv.blockPosition - minVal) / len
-        let currPx = Math.floor(x1 * width)
+        const currPx = Math.floor(x1 * width)
         if (lastPx === currPx && lastCount < 4) {
           ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 2), h)
           lastCount++
@@ -95,8 +92,7 @@ export default function FileLayout({
       }
     }
 
-    for (let i = 0; i < chunks.length; i++) {
-      const c = chunks[i]
+    for (const c of chunks) {
       const len = maxVal - minVal
       const x1 = (c.minv.blockPosition - minVal) / len
       const x2 = (c.maxv.blockPosition - minVal) / len
@@ -123,8 +119,7 @@ export default function FileLayout({
 
     let total = 0
     const totalPerBin = [0, 0, 0, 0, 0, 0]
-    for (let i = 0; i < chunks.length; i++) {
-      const c = chunks[i]
+    for (const c of chunks) {
       const len = maxVal - minVal
       const x1 = (c.minv.blockPosition - minVal) / len
       const x2 = (c.maxv.blockPosition - minVal) / len
@@ -151,7 +146,9 @@ export default function FileLayout({
             id="optimize"
             type="checkbox"
             checked={optimize}
-            onChange={event => setOptimize(event.target.checked)}
+            onChange={event => {
+              setOptimize(event.target.checked)
+            }}
           />
         </div>
       </div>

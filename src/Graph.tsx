@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react'
 import { max, sum, fmt, fmt2 } from './util'
-import { BAI } from '@gmod/bam'
+import type { BAI } from '@gmod/bam'
 
 function fillRect(
   ctx: CanvasRenderingContext2D,
@@ -32,7 +32,7 @@ function drawRow({
   offset,
 }: {
   size: number
-  bins: { [key: string]: number }
+  bins: Record<string, number>
   curr: number
   row: number
   yunit: number
@@ -45,7 +45,7 @@ function drawRow({
   const xunit = (width / size) * scale
   const xmin = Math.max(1, xunit)
   ctx.strokeStyle = `rgb(0,0,0,0.3)`
-  let lastDrawn = -Infinity
+  let lastDrawn = Number.NEGATIVE_INFINITY
   for (let i = 0; i < size; i++) {
     const px = Math.floor(xunit * i)
     if (px !== lastDrawn) {
@@ -102,7 +102,7 @@ export default function Graph({
       Math.max(0, (offset / width) * c),
       Math.max(0, ((offset + width) / width) * c),
     ])
-  }, [offset, width, c])
+  }, [setCurrPos, offset, width, c])
 
   useEffect(() => {
     if (mouseDown) {
@@ -134,7 +134,7 @@ export default function Graph({
         document.removeEventListener('mousemove', onMouseMove)
         document.removeEventListener('mouseup', onMouseUp)
       }
-    } else return () => {}
+    }
   }, [mouseDown, scale, offset])
 
   useEffect(() => {
@@ -146,13 +146,13 @@ export default function Graph({
     if (!ctx) {
       return
     }
-    let { width, height } = canvas.getBoundingClientRect()
+    const { width, height } = canvas.getBoundingClientRect()
     canvas.width = width
     canvas.height = height
 
     const yunit = height / 6
     ctx.clearRect(0, 0, width, height)
-    const scalar = maxVal !== '' ? +maxVal : max(Object.values(sizes))
+    const scalar = maxVal === '' ? max(Object.values(sizes)) : +maxVal
     const cb = (f: number) =>
       `hsl(${Math.min((f / scalar) * 200, 200)},50%,50%)`
 
@@ -223,7 +223,7 @@ export default function Graph({
     })
     curr += 4096
     drawRow({
-      size: 32767,
+      size: 32_767,
       row: 5,
       bins: sizes,
       yunit,
@@ -235,7 +235,7 @@ export default function Graph({
       offset,
     })
 
-    var gradient = ctx.createLinearGradient(0, 0, 0, 75)
+    const gradient = ctx.createLinearGradient(0, 0, 0, 75)
     gradient.addColorStop(0, 'hsl(200,50%,50%)')
     gradient.addColorStop(1 / 5, 'hsl(160,50%,50%)')
     gradient.addColorStop(2 / 5, 'hsl(120,50%,50%)')
@@ -248,7 +248,7 @@ export default function Graph({
     ctx.strokeRect(width - 10, 0, 10, 75)
     ctx.fillStyle = 'black'
     const str0 = `0`
-    const str1 = `${fmt(scalar, 0)}`
+    const str1 = fmt(scalar, 0)
     const res0 = ctx.measureText(str0)
     const res1 = ctx.measureText(str1)
     ctx.fillText(str1, width - 10 - res1.width, 10)
@@ -260,7 +260,7 @@ export default function Graph({
       return
     }
 
-    let { width } = canvas.getBoundingClientRect()
+    const { width } = canvas.getBoundingClientRect()
     setWidth(width)
   }, [])
 

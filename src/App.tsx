@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { BlobFile } from 'generic-filehandle'
-import { BamFile, BAI } from '@gmod/bam'
+import { BamFile } from '@gmod/bam'
 import DataViewer from './DataViewer'
-import { BamData } from './util'
+import type { BamData } from './util'
 
 const nanopore =
   'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/ultra-long-ont_hs37d5_phased.bam'
@@ -38,6 +38,7 @@ function App() {
   const localsLoaded = n0 && n1
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     ;(async () => {
       try {
         setError(undefined)
@@ -68,9 +69,9 @@ function App() {
             setData({ bam, indexToChr, chrToIndex, bai, header })
           }
         }
-      } catch (e) {
-        setError(e)
-        console.error(e)
+      } catch (error_) {
+        setError(error_)
+        console.error(error_)
       }
     })()
   }, [bamUrl, baiUrl, counter, useLocal])
@@ -79,14 +80,18 @@ function App() {
     <div className="App">
       <div>
         <h2>BAM index visualizer</h2>
-        <button onClick={() => setHideHelp(!hideHelp)}>
+        <button
+          onClick={() => {
+            setHideHelp(!hideHelp)
+          }}
+        >
           {hideHelp ? 'Show help' : 'Hide help'}
         </button>
         <p>
           This is a project that helps visualize the structure of the bin index
           of BAM index (BAI) files.
         </p>
-        {!hideHelp ? (
+        {hideHelp ? null : (
           <>
             <h4>What is a BAI file</h4>
             <p>
@@ -121,7 +126,7 @@ function App() {
               being requested (also responsive to zooming in on the first chart)
             </p>
           </>
-        ) : null}
+        )}
         <div className="form">
           <fieldset>
             <legend>Open file:</legend>
@@ -133,7 +138,9 @@ function App() {
                 name="local"
                 value="local"
                 checked={useLocal}
-                onChange={() => setUseLocal(true)}
+                onChange={() => {
+                  setUseLocal(true)
+                }}
               />
               <label htmlFor="local">Local files</label>
             </div>
@@ -143,7 +150,9 @@ function App() {
                 type="radio"
                 id="url"
                 value="url"
-                onChange={() => setUseLocal(false)}
+                onChange={() => {
+                  setUseLocal(false)
+                }}
                 checked={!useLocal}
               />
               <label htmlFor="url"> URLs</label>
@@ -156,7 +165,9 @@ function App() {
                     id="bam_local"
                     type="file"
                     ref={bamLocal}
-                    onChange={() => setCounter(counter + 1)}
+                    onChange={() => {
+                      setCounter(counter + 1)
+                    }}
                   />
                 </div>
                 <div>
@@ -165,7 +176,9 @@ function App() {
                     id="bai_local"
                     type="file"
                     ref={baiLocal}
-                    onChange={() => setCounter(counter + 1)}
+                    onChange={() => {
+                      setCounter(counter + 1)
+                    }}
                   />
                 </div>
               </div>
@@ -179,7 +192,9 @@ function App() {
                       type="text"
                       className="urlinput"
                       value={bamUrl}
-                      onChange={event => setBamUrl(event.target.value)}
+                      onChange={event => {
+                        setBamUrl(event.target.value)
+                      }}
                     />
                   </div>
                   <div>
@@ -189,7 +204,9 @@ function App() {
                       type="text"
                       className="urlinput"
                       value={baiUrl}
-                      onChange={event => setBaiUrl(event.target.value)}
+                      onChange={event => {
+                        setBaiUrl(event.target.value)
+                      }}
                     />
                   </div>
                 </div>
@@ -252,12 +269,12 @@ function App() {
       </div>
       {error ? (
         <div style={{ color: 'red' }}>{`${error}`}</div>
-      ) : !data ? (
+      ) : data ? (
+        <DataViewer data={data} />
+      ) : (
         <div>
           {useLocal ? (localsLoaded ? 'Loading...' : '') : 'Loading...'}
         </div>
-      ) : (
-        <DataViewer data={data} />
       )}
       <a href="https://github.com/cmdcolin/bam_index_visualizer">Github</a>
     </div>
