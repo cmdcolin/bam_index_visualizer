@@ -4,16 +4,22 @@ import eslintPluginReactHooks from 'eslint-plugin-react-hooks'
 import eslintPluginReactRefresh from 'eslint-plugin-react-refresh'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
 import tseslint from 'typescript-eslint'
-import globals from 'globals'
 
 export default tseslint.config(
   {
-    ignores: ['**/build/**/*'],
+    ignores: [
+      'vite.config.ts',
+      'tailwind.config.js',
+      'postcss.config.js',
+      'eslint.config.mjs',
+      'scripts/*',
+      'dist/*',
+    ],
   },
   {
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.json'],
+        project: ['./tsconfig.app.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
