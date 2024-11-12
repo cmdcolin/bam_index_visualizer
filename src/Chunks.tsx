@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type Chunk from './chunk'
 import { fmt } from './util'
 import type { BamFile } from '@gmod/bam'

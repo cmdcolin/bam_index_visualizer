@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { Chunks } from './Chunks'
 import { TotalsPerBin } from './TotalsPerBin'
 import { type BamData, colors, fmt, getChunks, max, min } from './util'

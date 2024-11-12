@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import { max, sum, fmt, fmt2 } from './util'
 import type { BAI } from '@gmod/bam'
 

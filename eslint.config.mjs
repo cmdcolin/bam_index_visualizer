@@ -10,7 +10,6 @@ export default tseslint.config(
     ignores: [
       'vite.config.ts',
       'tailwind.config.js',
-      'postcss.config.js',
       'eslint.config.mjs',
       'scripts/*',
       'dist/*',
