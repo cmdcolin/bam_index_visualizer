@@ -1,4 +1,3 @@
-import React from 'react'
 import { colors, fmt } from './util'
 export function TotalsPerBin({
   total,

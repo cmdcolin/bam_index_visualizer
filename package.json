@@ -7,21 +7,21 @@
     "dev": "vite",
     "lint": "eslint --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write .",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "postdeploy": "git push"
   },
   "dependencies": {
-    "@gmod/bam": "^4.0.1",
-    "buffer": "^6.0.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@gmod/bam": "^5.0.1",
+    "generic-filehandle2": "^1.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
-    "@types/react": "^18.2.14",
-    "@types/react-dom": "^18.2.6",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
     "@typescript-eslint/eslint-plugin": "^8.0.1",
     "@typescript-eslint/parser": "^8.0.1",
     "@vitejs/plugin-react": "^4.0.1",

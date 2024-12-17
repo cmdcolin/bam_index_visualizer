@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { BlobFile } from 'generic-filehandle'
+import { BlobFile } from 'generic-filehandle2'
 import { BamFile } from '@gmod/bam'
 import DataViewer from './DataViewer'
 import type { BamData } from './util'

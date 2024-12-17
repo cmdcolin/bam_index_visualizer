@@ -59,7 +59,7 @@ export function Chunks({
 
               let done = false
               for (const feature of records) {
-                if (feature.get('start') >= ep) {
+                if (feature.start >= ep) {
                   done = true
                   break
                 }
