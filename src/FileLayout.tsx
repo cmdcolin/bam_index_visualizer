@@ -1,7 +1,7 @@
 import { useRef, useEffect, useMemo, useState } from 'react'
 import { Chunks } from './Chunks'
 import { TotalsPerBin } from './TotalsPerBin'
-import { type BamData, colors, fmt, getChunks, max, min } from './util'
+import { type BamData, colors, fmt, fmt2, getChunks, max, min } from './util'
 
 function getLevel(b: number) {
   if (b === 0) {
@@ -20,6 +20,8 @@ function getLevel(b: number) {
 }
 
 const h = 20
+
+const levelLabels = ['512Mb', '64Mb', '8Mb', '1Mb', '128kb', '16kb']
 
 export default function FileLayout({
   data,
@@ -151,13 +153,15 @@ export default function FileLayout({
   }, [minVal, maxVal, chunks])
 
   return (
-    <div>
-      <h2>Request pattern for a given query</h2>
-      <div>
-        <div>
-          <label htmlFor="optimize">
-            Optimize/de-duplicate overlapping chunks?
-          </label>
+    <div className="file-layout">
+      <div className="file-layout-header">
+        <div className="file-layout-region">
+          <span className="region-label">Viewing region:</span>
+          <span className="region-value">
+            {chr}:{fmt2(sp, 1, false)}-{fmt2(ep)}
+          </span>
+        </div>
+        <label htmlFor="optimize" className="optimize-checkbox">
           <input
             id="optimize"
             type="checkbox"
@@ -166,45 +170,47 @@ export default function FileLayout({
               setOptimize(event.target.checked)
             }}
           />
-        </div>
+          De-duplicate chunks
+        </label>
       </div>
-      <p>
-        Block positions for query, colored by bin level, and split into the
-        different "bin levels" with all bins marked but colored ones are
-        included in query. Note: The colors/bin levels are basically arbitrary
-        once optimizing is on, because a block can start in any one of the bins,
-        and get merged with any other bin.
-      </p>
-      <div style={{ margin: 10 }}>
-        <div style={{ textAlign: 'center' }}>
-          chromosome: {chr} - occupies {fmt(minVal)} - {fmt(maxVal)} in file
-          (bytes, not bp)
+      <div className="file-layout-subtitle">
+        Byte-range requests to fetch (file occupies {fmt(minVal)} -{' '}
+        {fmt(maxVal)})
+      </div>
+      <div className="file-layout-canvas">
+        <div className="canvas-row">
+          <div className="canvas-label">Merged</div>
+          <canvas ref={ref} style={{ flex: 1, height: h }} />
         </div>
-        <canvas ref={ref} style={{ width: '90%', height: h }} />
-        <canvas ref={ref2} style={{ width: '90%', height: h * 6 }} />
+        <div className="canvas-row">
+          <div className="canvas-labels">
+            {levelLabels.map(label => (
+              <div key={label} className="canvas-label" style={{ height: h }}>
+                {label}
+              </div>
+            ))}
+          </div>
+          <canvas ref={ref2} style={{ flex: 1, height: h * 6 }} />
+        </div>
       </div>
       <TotalsPerBin total={total} totalPerBin={totalPerBin} />
       <Chunks chunks={chunks} context={data} currPos={currPos} />
 
-      <p>
-        [1] You may observe in the above diagram that the requests are scattered
-        all over the file. In practice, we do not fetch all these blocks and
-        instead, fetch them one at a time. Remember the file is still coordinate
-        sorted, so we can fetch lower-byte ranges first, and then check if we
-        encounter an alignment in a given block that is beyond our requested
-        coordinate range, and if so, abort checking any further blocks. This is
-        noted in SAMv1.pdf Sec 5.1.1 p.2. Also note that the "optimize routine"
-        can use the linear index to find bins from the bin index that are less
-        than the query range, hence, clicking this box you'll see boxes to the
-        left disappear.
-      </p>
-      <p>
-        [2] In genome browsers on the web, we sometimes avoid merging too many
-        BAI blocks into a single large block, because unzipping this block would
-        unzip to a very large memory buffer, and we do not have streaming
-        unzipping of the block data. Breaking them up is kind of like a little
-        form of 'streaming'
-      </p>
+      <div>
+        <p>
+          [1] You may observe that the requests are scattered all over the file.
+          In practice, we do not fetch all these blocks at once. The file is
+          coordinate sorted, so we fetch lower-byte ranges first and abort once
+          we encounter an alignment beyond the requested range (see SAMv1.pdf
+          Sec 5.1.1). The de-duplicate option uses the linear index to exclude
+          bins before the query range.
+        </p>
+        <p>
+          [2] In genome browsers, we sometimes avoid merging too many BAI blocks
+          into a single large block, because unzipping would require a very
+          large memory buffer without streaming decompression.
+        </p>
+      </div>
     </div>
   )
 }

@@ -118,22 +118,31 @@ export function fmt(n: number, fixed = 2) {
 }
 
 function f(n: number, fixed = 0) {
-  return n.toLocaleString(undefined, {
-    maximumFractionDigits: fixed,
-  })
+  const str = fixed > 0 ? n.toFixed(fixed) : Math.round(n).toString()
+  const [intPart, decPart] = str.split('.')
+  const withCommas = intPart!.replaceAll(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return decPart ? `${withCommas}.${decPart}` : withCommas
 }
 
-export function fmt2(n: number, fixed = 1) {
+export function fmt2(n: number, fixed = 1, showUnit = true) {
   n = Math.min(Math.max(0, n), 2 ** 29 - 1)
+  let unit = ''
+  let val: string
   if (n > 1000 * 1000 * 1000) {
-    return f(n / (1000 * 1000 * 1000), fixed) + 'Gbp'
+    val = f(n / (1000 * 1000 * 1000), fixed)
+    unit = 'Gbp'
   } else if (n > 1000 * 1000) {
-    return f(n / (1000 * 1000), fixed) + 'Mbp'
+    val = f(n / (1000 * 1000), fixed)
+    unit = 'Mbp'
   } else if (n > 1000) {
-    return f(n / 1000, fixed) + 'kbp'
+    val = f(n / 1000, fixed)
+    unit = 'kbp'
   } else {
-    return f(n, fixed) + 'bp'
+    val = f(n, fixed)
+    unit = 'bp'
   }
+  val = val.replace(/\.0+$/, '')
+  return showUnit ? val + unit : val
 }
 
 export function getChunks(

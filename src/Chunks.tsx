@@ -36,8 +36,8 @@ export function Chunks({
   }, [chunks])
 
   return (
-    <div>
-      <h2>Requested block overview</h2>
+    <details>
+      <summary>Requested block overview</summary>
       <button
         onClick={() => {
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -121,6 +121,6 @@ export function Chunks({
           ) : null}
         </ul>
       </div>
-    </div>
+    </details>
   )
 }

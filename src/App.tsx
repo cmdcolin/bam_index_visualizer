@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { BlobFile } from 'generic-filehandle2'
 import { BamFile } from '@gmod/bam'
 import DataViewer from './DataViewer'
@@ -72,10 +72,10 @@ function App() {
   const [baiUrl, setBaiUrl] = useState(exampleFiles[0]!.url + '.bai')
   const bamLocal = useRef<HTMLInputElement>(null)
   const baiLocal = useRef<HTMLInputElement>(null)
+  const helpDialogRef = useRef<HTMLDialogElement>(null)
   const [useLocal, setUseLocal] = useState(false)
   const [data, setData] = useState<BamData>()
   const [error, setError] = useState<unknown>()
-  const [hideHelp, setHideHelp] = useState(true)
   const [localBamFile, setLocalBamFile] = useState<File>()
   const [localBaiFile, setLocalBaiFile] = useState<File>()
   const [downloadProgress, setDownloadProgress] = useState<{
@@ -84,6 +84,23 @@ function App() {
   } | null>(null)
 
   const localsLoaded = localBamFile && localBaiFile
+
+  const openHelp = useCallback(() => {
+    helpDialogRef.current?.showModal()
+  }, [])
+
+  const closeHelp = useCallback(() => {
+    helpDialogRef.current?.close()
+  }, [])
+
+  const handleDialogClick = useCallback(
+    (event: React.MouseEvent<HTMLDialogElement>) => {
+      if (event.target === helpDialogRef.current) {
+        closeHelp()
+      }
+    },
+    [closeHelp],
+  )
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -135,129 +152,140 @@ function App() {
     <div className="App">
       <div>
         <h2>BAM index visualizer</h2>
-        <button
-          onClick={() => {
-            setHideHelp(!hideHelp)
-          }}
-        >
-          {hideHelp ? 'Show help' : 'Hide help'}
-        </button>
+        <button onClick={openHelp}>Help</button>
         <p>
           This is a project that helps visualize the structure of the bin index
           of BAM index (BAI) files.
         </p>
-        {hideHelp ? null : (
-          <>
-            <h4>What is a BAI file</h4>
-            <p>
-              The BAI (BAM index) allows users to download only the data that is
-              needed for a particular query e.g. chr1:1-100 from a BAM file. The
-              BAI is significantly smaller than a BAM and is read into memory.
-              It contains bins, which themselves contain one of more "start and
-              end" pointers to where in the BAM file to look for the reads for
-              your query. This program will show you what this bin structure
-              looks like in a given BAI file.
-            </p>
-            <p>
-              The first chart below shows the 536Mbp overview. This is because
-              the bins for the BAI cannot address chromosomes larger than 536Mbp
-              (2^29-1), and so this graph shows this "total overview". Bins are
-              colored by how much data are in them scaled against the largest
-              bin. You can also click and drag the grey bar above the view to
-              "zoom in" or side scroll the canvas.
-            </p>
-            <p>
-              The second chart shows an overview of the byte ranges that would
-              be requested from the BAM, and it is responsive to zooming in and
-              out on the first chart.
-            </p>
-            <p>
-              The third chart/table is the actual textual representation of
-              which bins are being requested, and if you click the button, it
-              will actually go and fetch the data from the BAM file, which will
-              also demonstrate the short-circuiting action because not all the
-              bins have to be requested: the program can stop once it finds a
-              read in the BAM file that is beyond the genomic coordinate range
-              being requested (also responsive to zooming in on the first chart)
-            </p>
-          </>
-        )}
+        <dialog ref={helpDialogRef} onClick={handleDialogClick}>
+          <h3>What is a BAI file?</h3>
+          <p>
+            The BAI (BAM index) allows users to download only the data that is
+            needed for a particular query e.g. chr1:1-100 from a BAM file. The
+            BAI is significantly smaller than a BAM and is read into memory. It
+            contains bins, which themselves contain one of more "start and end"
+            pointers to where in the BAM file to look for the reads for your
+            query. This program will show you what this bin structure looks like
+            in a given BAI file.
+          </p>
+          <h3>How does this work?</h3>
+          <p>
+            The top diagram shows the distribution of data in the bins from the
+            binning index for a particular chromosome. The binning index has 6
+            levels of bins, and each level can address 536Mbp of genomic
+            coordinates (this is the maximum size of a single chromosome that
+            BAI can index). We use the "reg2bin" function (see SAMv1.pdf) to map
+            a given coordinate region query (reg) to a set of bins to look in.
+            The bins then tell us where to look in the BAM file.
+          </p>
+          <p>
+            The different bin levels are needed when e.g. a read crosses a
+            boundary between two bins, in this case, it's placed into a larger
+            bin. Longer reads can trigger this, but short reads can too when
+            they just happen to cross a boundary. The bins from the different
+            levels overlap (you can visually see this, all 6 levels cover the
+            same genomic space) but we can deduplicate the bins to make a
+            smaller number of read requests from the file.
+          </p>
+          <p>
+            The bottom diagram shows the exact byte range requests made to the
+            file for the currently viewed region in the top diagram.
+          </p>
+          <h4>The bin index visualization</h4>
+          <p>
+            The first chart shows the 536Mbp overview. This is because the bins
+            for the BAI cannot address chromosomes larger than 536Mbp (2^29-1),
+            and so this graph shows this "total overview". Bins are colored by
+            how much data are in them scaled against the largest bin. You can
+            click and drag the grey bar above the view to "zoom in" or side
+            scroll the canvas.
+          </p>
+          <h4>The request pattern</h4>
+          <p>
+            The second chart shows an overview of the byte ranges that would be
+            requested from the BAM, and it is responsive to zooming in and out
+            on the first chart.
+          </p>
+          <h4>Block overview</h4>
+          <p>
+            The third section lists which bins are being requested. Click the
+            button to fetch data from the BAM file, which demonstrates
+            short-circuiting: the program stops once it finds a read beyond the
+            requested coordinate range.
+          </p>
+          <button onClick={closeHelp}>Close</button>
+        </dialog>
         <div className="form">
           <fieldset>
             <legend>Open file:</legend>
-
-            <div>
-              <input
-                type="radio"
-                id="local"
-                name="local"
-                value="local"
-                checked={useLocal}
-                onChange={() => {
-                  setUseLocal(true)
-                }}
-              />
-              <label htmlFor="local">Local files</label>
-            </div>
-
-            <div>
-              <input
-                type="radio"
-                id="url"
-                value="url"
-                onChange={() => {
-                  setUseLocal(false)
-                }}
-                checked={!useLocal}
-              />
-              <label htmlFor="url"> URLs</label>
+            <div className="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="source"
+                  value="url"
+                  checked={!useLocal}
+                  onChange={() => {
+                    setUseLocal(false)
+                  }}
+                />
+                URLs
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="source"
+                  value="local"
+                  checked={useLocal}
+                  onChange={() => {
+                    setUseLocal(true)
+                  }}
+                />
+                Local files
+              </label>
             </div>
             {useLocal ? (
-              <div>
-                <div>
-                  <label htmlFor="bam_local">BAM</label>
+              <div className="file-inputs">
+                <label>
+                  BAM{' '}
                   <input
-                    id="bam_local"
                     type="file"
                     ref={bamLocal}
                     onChange={event => {
                       setLocalBamFile(event.target.files?.[0])
                     }}
                   />
-                </div>
-                <div>
-                  <label htmlFor="bai_local">BAI</label>
+                </label>
+                <label>
+                  BAI{' '}
                   <input
-                    id="bai_local"
                     type="file"
                     ref={baiLocal}
                     onChange={event => {
                       setLocalBaiFile(event.target.files?.[0])
                     }}
                   />
-                </div>
+                </label>
               </div>
             ) : (
-              <div className="splitter">
-                <div>
-                  <div>
-                    <label htmlFor="url">BAM URL: </label>
+              <div className="url-inputs">
+                <div className="url-fields">
+                  <div className="url-row">
+                    <label htmlFor="bam">BAM</label>
                     <input
                       id="bam"
                       type="text"
-                      className="urlinput"
                       value={bamUrl}
                       onChange={event => {
                         setBamUrl(event.target.value)
                       }}
                     />
                   </div>
-                  <div>
-                    <label htmlFor="url">BAI URL: </label>
+                  <div className="url-row">
+                    <label htmlFor="bai">BAI</label>
                     <input
                       id="bai"
                       type="text"
-                      className="urlinput"
                       value={baiUrl}
                       onChange={event => {
                         setBaiUrl(event.target.value)
@@ -265,8 +293,8 @@ function App() {
                     />
                   </div>
                 </div>
-                <div className="buttons">
-                  <div>Example files:</div>
+                <div className="example-buttons">
+                  <span>Examples:</span>
                   {exampleFiles.map(file => (
                     <button
                       key={file.url}
