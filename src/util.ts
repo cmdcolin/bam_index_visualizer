@@ -41,12 +41,13 @@ export function median(arr: number[]) {
   }
   arr.sort((a, b) => a - b)
   const midpoint = Math.floor(arr.length / 2)
-  return arr.length % 2 === 1
-    ? arr[midpoint]
-    : (arr[midpoint - 1] + arr[midpoint]) / 2
+  if (arr.length % 2 === 1) {
+    return arr[midpoint] ?? 0
+  }
+  return ((arr[midpoint - 1] ?? 0) + (arr[midpoint] ?? 0)) / 2
 }
 
-export function reg2bins(beg: number, end: number) {
+export function reg2bins(beg: number, end: number): [number, number][] {
   end -= 1
   return [
     [0, 0],
@@ -145,9 +146,8 @@ export function getChunks(
   const bins = reg2bins(s, e)
   for (const [start, end] of bins) {
     for (let bin = start; bin <= end; bin++) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (ba.binIndex[bin]) {
-        const binChunks = ba.binIndex[bin]
+      const binChunks = ba.binIndex[bin]
+      if (binChunks) {
         for (const binChunk of binChunks) {
           chunks.push(binChunk)
         }
@@ -163,7 +163,6 @@ export function getChunks(
   const maxLin = Math.min(e >> 14, nintv - 1)
   for (let i = minLin; i <= maxLin; ++i) {
     const vp = ba.linearIndex[i]
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (vp && (!lowest || vp.compareTo(lowest) < 0)) {
       lowest = vp
     }

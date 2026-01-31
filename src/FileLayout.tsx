@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useMemo, useState } from 'react'
 import { Chunks } from './Chunks'
 import { TotalsPerBin } from './TotalsPerBin'
 import { type BamData, colors, fmt, getChunks, max, min } from './util'
@@ -32,12 +32,13 @@ export default function FileLayout({
 }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const ref2 = useRef<HTMLCanvasElement>(null)
-  const [total, setTotal] = useState(0)
   const [optimize, setOptimize] = useState(true)
-  const [totalPerBin, setTotalPerBin] = useState<number[]>()
   const { minVal, maxVal } = useMemo(() => {
     const { bai, chrToIndex } = data
-    const ba = bai.indices[chrToIndex[chr]]
+    const ba = bai.indices(chrToIndex[chr]!)
+    if (!ba) {
+      return { minVal: 0, maxVal: 0 }
+    }
     const bins = Object.values(ba.binIndex).flat()
     const maxVal = max(bins.map(c => c.maxv.blockPosition))
     const minVal = min(bins.map(c => c.minv.blockPosition))
@@ -47,9 +48,24 @@ export default function FileLayout({
 
   const chunks = useMemo(() => {
     const { bai, chrToIndex } = data
-    const ba = bai.indices[chrToIndex[chr]]
+    const ba = bai.indices(chrToIndex[chr]!)
+    if (!ba) {
+      return []
+    }
     return getChunks(sp, ep, ba, optimize)
   }, [data, sp, ep, chr, optimize])
+
+  const { total, totalPerBin } = useMemo(() => {
+    let total = 0
+    const totalPerBin = [0, 0, 0, 0, 0, 0]
+    for (const c of chunks) {
+      const size = c.fetchedSize()
+      total += size
+      const level = getLevel(c.bin)
+      totalPerBin[level] = (totalPerBin[level] ?? 0) + size
+    }
+    return { total, totalPerBin }
+  }, [chunks])
 
   useEffect(() => {
     const canvas = ref2.current
@@ -62,7 +78,10 @@ export default function FileLayout({
     }
 
     const { bai, chrToIndex } = data
-    const ba = bai.indices[chrToIndex[chr]]
+    const ba = bai.indices(chrToIndex[chr]!)
+    if (!ba) {
+      return
+    }
     const width = canvas.getBoundingClientRect().width
     const height = canvas.getBoundingClientRect().height
     canvas.width = width
@@ -74,7 +93,11 @@ export default function FileLayout({
     ctx.fillStyle = 'rgba(0,0,0,0.1)'
     let lastPx = Number.NEGATIVE_INFINITY
     let lastCount = 0
-    for (const [key, val] of Object.entries(ba.binIndex)) {
+    for (const key of Object.keys(ba.binIndex)) {
+      const val = ba.binIndex[+key]
+      if (!val) {
+        continue
+      }
       const b = +key
       const level = getLevel(b)
       for (const c of val) {
@@ -97,7 +120,7 @@ export default function FileLayout({
       const x1 = (c.minv.blockPosition - minVal) / len
       const x2 = (c.maxv.blockPosition - minVal) / len
       const level = getLevel(c.bin)
-      ctx.fillStyle = colors[level]
+      ctx.fillStyle = colors[level]!
       ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 2), h)
     }
   }, [data, chr, minVal, maxVal, chunks])
@@ -117,21 +140,14 @@ export default function FileLayout({
     canvas.height = height
     ctx.clearRect(0, 0, width, height)
 
-    let total = 0
-    const totalPerBin = [0, 0, 0, 0, 0, 0]
     for (const c of chunks) {
       const len = maxVal - minVal
       const x1 = (c.minv.blockPosition - minVal) / len
       const x2 = (c.maxv.blockPosition - minVal) / len
-      const size = c.fetchedSize()
-      total += size
       const level = getLevel(c.bin)
-      totalPerBin[level] += size
-      ctx.fillStyle = colors[level]
+      ctx.fillStyle = colors[level]!
       ctx.fillRect(x1 * width, 0, Math.max((x2 - x1) * width, 2), h + 2)
     }
-    setTotal(total)
-    setTotalPerBin(totalPerBin)
   }, [minVal, maxVal, chunks])
 
   return (

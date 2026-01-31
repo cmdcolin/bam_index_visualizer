@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type Chunk from './chunk'
 import { fmt } from './util'
 import type { BamFile } from '@gmod/bam'
@@ -12,19 +12,23 @@ export function Chunks({
   chunks: Chunk[]
   currPos: [number, number]
 }) {
+  const [sp, ep] = currPos
+  const cacheKey = `${chunks.length}-${sp}-${ep}`
   const [stoppingPoint, setStoppingPoint] = useState(0)
   const [totalFetched, setTotalFetched] = useState(0)
   const [loading, setLoading] = useState(false)
   const [currChunk, setCurrChunk] = useState(0)
-  const [sp, ep] = currPos
-  useEffect(() => {
+  const [lastCacheKey, setLastCacheKey] = useState(cacheKey)
+
+  if (cacheKey !== lastCacheKey) {
     setStoppingPoint(0)
     setTotalFetched(0)
-  }, [chunks, sp, ep])
+    setLastCacheKey(cacheKey)
+  }
 
   const memod = useMemo(() => {
     return chunks.map(c => ({
-      ...c,
+      chunk: c,
       fmt1: fmt(c.minv.blockPosition, 5),
       fmt2: fmt(c.maxv.blockPosition, 5),
       fmt3: fmt(c.fetchedSize(), 5),
@@ -93,7 +97,7 @@ export function Chunks({
         <ul>
           {memod.slice(0, 200).map((c, idx) => (
             <li
-              key={`${JSON.stringify(c)}-${idx}`}
+              key={`${JSON.stringify(c.chunk)}-${idx}`}
               style={{
                 background:
                   totalFetched === 0
@@ -103,7 +107,7 @@ export function Chunks({
                       : '#a003',
               }}
             >
-              bin number: {c.bin} - file offsets {c.fmt1} - {c.fmt2} (fetched
+              bin number: {c.chunk.bin} - file offsets {c.fmt1} - {c.fmt2} (fetched
               size {c.fmt3}){' '}
               {totalFetched === 0
                 ? ''

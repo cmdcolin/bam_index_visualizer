@@ -75,7 +75,7 @@ export default function Graph({
   maxVal,
   setCurrPos,
 }: {
-  bai: Awaited<ReturnType<BAI['parse']>>['indices'][0]
+  bai: NonNullable<ReturnType<Awaited<ReturnType<BAI['parse']>>['indices']>>
   maxVal: string
   setCurrPos: (arg: [number, number]) => void
 }) {
@@ -89,12 +89,14 @@ export default function Graph({
   const c = 2 ** 29 / scale
 
   const sizes = useMemo(() => {
-    return Object.fromEntries(
-      Object.entries(bai.binIndex).map(([key, val]) => [
-        key,
-        sum(val.map(f => f.fetchedSize())),
-      ]),
-    )
+    const result: Record<string, number> = {}
+    for (const key of Object.keys(bai.binIndex)) {
+      const val = bai.binIndex[+key]
+      if (val) {
+        result[key] = sum(val.map(f => f.fetchedSize()))
+      }
+    }
+    return result
   }, [bai])
 
   useEffect(() => {

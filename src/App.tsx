@@ -4,38 +4,86 @@ import { BamFile } from '@gmod/bam'
 import DataViewer from './DataViewer'
 import type { BamData } from './util'
 
-const nanopore =
-  'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/ultra-long-ont_hs37d5_phased.bam'
+const exampleFiles = [
+  {
+    name: 'Illumina reads (hg19, HG002 2x250bp)',
+    url: 'https://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/HG002_NA24385_son/NIST_Illumina_2x250bps/novoalign_bams/HG002.hs37d5.2x250.bam',
+  },
+  {
+    name: 'Nanopore ultralong (hg19, HG002)',
+    url: 'https://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/HG002_NA24385_son/Ultralong_OxfordNanopore/guppy-V3.4.5/HG002_hs37d5_ONT-UL_GIAB_20200204.bam',
+  },
+  {
+    name: 'PacBio CLR reads (hg19, SKBR3)',
+    url: 'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/skbr3/reads_lr_skbr3.fa_ngmlr-0.2.3_mapped.down.bam',
+  },
+  {
+    name: 'PacBio HiFi reads (hg19, HG002 SequelII)',
+    url: 'https://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/HG002_NA24385_son/PacBio_SequelII_CCS_11kb/HG002.SequelII.pbmm2.hs37d5.whatshap.haplotag.RTG.10x.trio.bam',
+  },
+  {
+    name: 'PacBio IsoSeq (hg19)',
+    url: 'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/alzheimers_isoseq/hq_isoforms.fasta.bam',
+  },
+  {
+    name: 'SARS-CoV2 (small BAI, zoom in on left)',
+    url: 'https://s3.amazonaws.com/jbrowse.org/genomes/sars-cov2/LSPA-3EBF5EC.220708_A01404_0494_BH3J3TDRX2.2t183.bam',
+  },
+]
 
-const pacbio =
-  'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/reads_lr_skbr3.fa_ngmlr-0.2.3_mapped.bam'
+async function fetchWithProgress(
+  url: string,
+  onProgress: (loaded: number, total: number | null) => void,
+) {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status}`)
+  }
+  const contentLength = response.headers.get('Content-Length')
+  const total = contentLength ? Number.parseInt(contentLength, 10) : null
+  const reader = response.body?.getReader()
+  if (!reader) {
+    throw new Error('No response body')
+  }
 
-const illumina =
-  'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/HG002.hs37d5.2x250.bam'
+  const chunks: Uint8Array[] = []
+  let loaded = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) {
+      break
+    }
+    chunks.push(value)
+    loaded += value.length
+    onProgress(loaded, total)
+  }
 
-const pacbio2 =
-  'https://jbrowse.org/genomes/hg19/pacbio/m64011_181218_235052.8M.HG002.hs37d5.11kb.bam'
-
-const isoseq =
-  'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/alzheimers_isoseq/hq_isoforms.fasta.bam'
-
-const sarscov2 =
-  'https://s3.amazonaws.com/jbrowse.org/genomes/sars-cov2/LSPA-3EBF5EC.220708_A01404_0494_BH3J3TDRX2.2t183.bam'
+  const result = new Uint8Array(loaded)
+  let position = 0
+  for (const chunk of chunks) {
+    result.set(chunk, position)
+    position += chunk.length
+  }
+  return result
+}
 
 function App() {
-  const [bamUrl, setBamUrl] = useState(illumina)
-  const [baiUrl, setBaiUrl] = useState(illumina + '.bai')
+  const [bamUrl, setBamUrl] = useState(exampleFiles[0]!.url)
+  const [baiUrl, setBaiUrl] = useState(exampleFiles[0]!.url + '.bai')
   const bamLocal = useRef<HTMLInputElement>(null)
   const baiLocal = useRef<HTMLInputElement>(null)
   const [useLocal, setUseLocal] = useState(false)
   const [data, setData] = useState<BamData>()
   const [error, setError] = useState<unknown>()
-  const [counter, setCounter] = useState(0)
   const [hideHelp, setHideHelp] = useState(true)
+  const [localBamFile, setLocalBamFile] = useState<File>()
+  const [localBaiFile, setLocalBaiFile] = useState<File>()
+  const [downloadProgress, setDownloadProgress] = useState<{
+    loaded: number
+    total: number | null
+  } | null>(null)
 
-  const n0 = bamLocal.current?.files?.[0]
-  const n1 = baiLocal.current?.files?.[0]
-  const localsLoaded = n0 && n1
+  const localsLoaded = localBamFile && localBaiFile
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -43,22 +91,28 @@ function App() {
       try {
         setError(undefined)
         setData(undefined)
+        setDownloadProgress(null)
 
         let bam
         if (useLocal) {
-          const n0 = bamLocal.current?.files?.[0]
-          const n1 = baiLocal.current?.files?.[0]
-          if (n0 && n1) {
+          if (localBamFile && localBaiFile) {
             bam = new BamFile({
-              bamFilehandle: new BlobFile(n0),
-              baiFilehandle: new BlobFile(n1),
+              bamFilehandle: new BlobFile(localBamFile),
+              baiFilehandle: new BlobFile(localBaiFile),
             })
           } else {
             return
           }
         } else {
-          bam = new BamFile({ bamUrl, baiUrl })
+          const baiData = await fetchWithProgress(baiUrl, (loaded, total) => {
+            setDownloadProgress({ loaded, total })
+          })
+          bam = new BamFile({
+            bamUrl,
+            baiFilehandle: new BlobFile(new Blob([baiData])),
+          })
         }
+        setDownloadProgress(null)
         const header = await bam.getHeader()
         const indexToChr = bam.indexToChr
         const chrToIndex = bam.chrToIndex
@@ -71,10 +125,11 @@ function App() {
         }
       } catch (error_) {
         setError(error_)
+        setDownloadProgress(null)
         console.error(error_)
       }
     })()
-  }, [bamUrl, baiUrl, counter, useLocal])
+  }, [bamUrl, baiUrl, useLocal, localBamFile, localBaiFile])
 
   return (
     <div className="App">
@@ -165,8 +220,8 @@ function App() {
                     id="bam_local"
                     type="file"
                     ref={bamLocal}
-                    onChange={() => {
-                      setCounter(counter + 1)
+                    onChange={event => {
+                      setLocalBamFile(event.target.files?.[0])
                     }}
                   />
                 </div>
@@ -176,8 +231,8 @@ function App() {
                     id="bai_local"
                     type="file"
                     ref={baiLocal}
-                    onChange={() => {
-                      setCounter(counter + 1)
+                    onChange={event => {
+                      setLocalBaiFile(event.target.files?.[0])
                     }}
                   />
                 </div>
@@ -212,55 +267,17 @@ function App() {
                 </div>
                 <div className="buttons">
                   <div>Example files:</div>
-                  <button
-                    onClick={() => {
-                      setBamUrl(nanopore)
-                      setBaiUrl(nanopore + '.bai')
-                    }}
-                  >
-                    Nanopore ultralong (hg19, 60Mb BAI)
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBamUrl(pacbio)
-                      setBaiUrl(pacbio + '.bai')
-                    }}
-                  >
-                    PacBio CLR reads (hg19, 100Mb BAI)
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBamUrl(pacbio2)
-                      setBaiUrl(pacbio2 + '.bai')
-                    }}
-                  >
-                    PacBio HiFi reads (hg19, 2Mb BAI)
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBamUrl(illumina)
-                      setBaiUrl(illumina + '.bai')
-                    }}
-                  >
-                    Illumina reads (hg19, 9Mb BAI)
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBamUrl(isoseq)
-                      setBaiUrl(isoseq + '.bai')
-                    }}
-                  >
-                    PacBio IsoSeq (hg19, 1.5Mb BAI)
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBamUrl(sarscov2)
-                      setBaiUrl(sarscov2 + '.bai')
-                    }}
-                  >
-                    SARS-CoV2 (4kb BAI, all data is in basically a single BAI
-                    bin, zoom in on left)
-                  </button>
+                  {exampleFiles.map(file => (
+                    <button
+                      key={file.url}
+                      onClick={() => {
+                        setBamUrl(file.url)
+                        setBaiUrl(file.url + '.bai')
+                      }}
+                    >
+                      {file.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -273,7 +290,23 @@ function App() {
         <DataViewer data={data} />
       ) : (
         <div>
-          {useLocal ? (localsLoaded ? 'Loading...' : '') : 'Loading...'}
+          {useLocal ? (
+            localsLoaded ? (
+              'Loading...'
+            ) : (
+              ''
+            )
+          ) : downloadProgress ? (
+            <div>
+              Downloading BAI:{' '}
+              {(downloadProgress.loaded / 1024 / 1024).toFixed(2)} MB
+              {downloadProgress.total
+                ? ` / ${(downloadProgress.total / 1024 / 1024).toFixed(2)} MB (${Math.round((downloadProgress.loaded / downloadProgress.total) * 100)}%)`
+                : ' (size unknown)'}
+            </div>
+          ) : (
+            'Loading...'
+          )}
         </div>
       )}
       <a href="https://github.com/cmdcolin/bam_index_visualizer">Github</a>

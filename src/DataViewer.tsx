@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 // locals
 import Graph from './Graph'
@@ -7,12 +7,18 @@ import type { BamData } from './util'
 
 export default function DataViewer({ data }: { data: BamData }) {
   const { bai, chrToIndex, indexToChr } = data
-  const [chr, setChr] = useState(indexToChr[0].refName)
+  const [chr, setChr] = useState(indexToChr[0]!.refName)
   const [maxVal, setMaxVal] = useState('')
   const [currPos, setCurrPos] = useState<[number, number]>()
-  useEffect(() => {
-    setChr(indexToChr[0].refName)
-  }, [chrToIndex, indexToChr, bai])
+  const [lastBai, setLastBai] = useState(bai)
+
+  if (bai !== lastBai) {
+    setChr(indexToChr[0]!.refName)
+    setLastBai(bai)
+  }
+
+  const chrIdx = chrToIndex[chr]
+  const baiForChr = chrIdx === undefined ? undefined : bai.indices(chrIdx)
 
   return (
     <div>
@@ -42,11 +48,9 @@ export default function DataViewer({ data }: { data: BamData }) {
       />
 
       <br />
-      <Graph
-        bai={bai.indices[chrToIndex[chr]]}
-        maxVal={maxVal}
-        setCurrPos={setCurrPos}
-      />
+      {baiForChr ? (
+        <Graph bai={baiForChr} maxVal={maxVal} setCurrPos={setCurrPos} />
+      ) : null}
       <p>
         The above diagram shows the distribution of data in the bins from the
         binning index for a particular chromosome. The binning index has 6

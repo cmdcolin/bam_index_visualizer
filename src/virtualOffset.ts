@@ -17,14 +17,10 @@ export default class VirtualOffset {
   }
 
   static min(...args: VirtualOffset[]) {
-    let min
-    let i = 0
-    for (; !min; i += 1) {
-      min = args[i]
-    }
-    for (; i < args.length; i += 1) {
-      if (min.compareTo(args[i]) > 0) {
-        min = args[i]
+    let min: VirtualOffset | undefined
+    for (const arg of args) {
+      if (!min || min.compareTo(arg) > 0) {
+        min = arg
       }
     }
     return min
@@ -36,12 +32,12 @@ export function fromBytes(bytes: Uint8Array, offset = 0, bigendian = false) {
   }
 
   return new VirtualOffset(
-    bytes[offset + 7] * 0x1_00_00_00_00_00 +
-      bytes[offset + 6] * 0x1_00_00_00_00 +
-      bytes[offset + 5] * 0x1_00_00_00 +
-      bytes[offset + 4] * 0x1_00_00 +
-      bytes[offset + 3] * 0x1_00 +
-      bytes[offset + 2],
-    (bytes[offset + 1] << 8) | bytes[offset],
+    (bytes[offset + 7] ?? 0) * 0x1_00_00_00_00_00 +
+      (bytes[offset + 6] ?? 0) * 0x1_00_00_00_00 +
+      (bytes[offset + 5] ?? 0) * 0x1_00_00_00 +
+      (bytes[offset + 4] ?? 0) * 0x1_00_00 +
+      (bytes[offset + 3] ?? 0) * 0x1_00 +
+      (bytes[offset + 2] ?? 0),
+    ((bytes[offset + 1] ?? 0) << 8) | (bytes[offset] ?? 0),
   )
 }
