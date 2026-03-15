@@ -1,24 +1,9 @@
 import { colors, fmt } from './util'
-export function TotalsPerBin({
-  total,
-  totalPerBin,
-}: {
-  total: number
-  totalPerBin?: number[]
-}) {
+export function TotalsPerBin({ totalPerBin }: { totalPerBin?: number[] }) {
   return (
     <>
       {totalPerBin ? (
         <div>
-          <p>
-            Canvas shows the requested byte-ranges of the BAM file from the
-            coordinate query.
-          </p>
-          <p>
-            Total size of blocks from index {fmt(total)}. Real data downloaded
-            from BAM may be less because of [1], test this with the "Requested
-            block overview" window
-          </p>
           <div>
             On each bin level, data fetches amount to{' '}
             <ul>

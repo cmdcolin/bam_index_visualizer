@@ -1,7 +1,7 @@
 import { useRef, useEffect, useMemo, useState } from 'react'
 import { Chunks } from './Chunks'
 import { TotalsPerBin } from './TotalsPerBin'
-import { type BamData, colors, fmt, fmt2, getChunks, max, min } from './util'
+import { type BamData, colors, fmt, getChunks, max, min } from './util'
 
 function getLevel(b: number) {
   if (b === 0) {
@@ -34,7 +34,9 @@ export default function FileLayout({
 }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const ref2 = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [optimize, setOptimize] = useState(true)
+  const [canvasWidth, setCanvasWidth] = useState(0)
   const { minVal, maxVal } = useMemo(() => {
     const { bai, chrToIndex } = data
     const ba = bai.indices(chrToIndex[chr]!)
@@ -68,6 +70,23 @@ export default function FileLayout({
     }
     return { total, totalPerBin }
   }, [chunks])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) {
+      return
+    }
+    const observer = new ResizeObserver(entries => {
+      const entry = entries[0]
+      if (entry) {
+        setCanvasWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(container)
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
 
   useEffect(() => {
     const canvas = ref2.current
@@ -125,7 +144,7 @@ export default function FileLayout({
       ctx.fillStyle = colors[level]!
       ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 2), h)
     }
-  }, [data, chr, minVal, maxVal, chunks])
+  }, [data, chr, minVal, maxVal, chunks, canvasWidth])
 
   useEffect(() => {
     const canvas = ref.current
@@ -150,17 +169,11 @@ export default function FileLayout({
       ctx.fillStyle = colors[level]!
       ctx.fillRect(x1 * width, 0, Math.max((x2 - x1) * width, 2), h + 2)
     }
-  }, [minVal, maxVal, chunks])
+  }, [minVal, maxVal, chunks, canvasWidth])
 
   return (
     <div className="file-layout">
       <div className="file-layout-header">
-        <div className="file-layout-region">
-          <span className="region-label">Viewing region:</span>
-          <span className="region-value">
-            {chr}:{fmt2(sp, 1, false)}-{fmt2(ep)}
-          </span>
-        </div>
         <label htmlFor="optimize" className="optimize-checkbox">
           <input
             id="optimize"
@@ -175,9 +188,9 @@ export default function FileLayout({
       </div>
       <div className="file-layout-subtitle">
         Byte-range requests to fetch (file occupies {fmt(minVal)} -{' '}
-        {fmt(maxVal)})
+        {fmt(maxVal)}), total block size: {fmt(total)}
       </div>
-      <div className="file-layout-canvas">
+      <div className="file-layout-canvas" ref={containerRef}>
         <div className="canvas-row">
           <div className="canvas-label">Merged</div>
           <canvas ref={ref} style={{ flex: 1, height: h }} />
@@ -193,24 +206,9 @@ export default function FileLayout({
           <canvas ref={ref2} style={{ flex: 1, height: h * 6 }} />
         </div>
       </div>
-      <TotalsPerBin total={total} totalPerBin={totalPerBin} />
+      <TotalsPerBin totalPerBin={totalPerBin} />
       <Chunks chunks={chunks} context={data} currPos={currPos} />
 
-      <div>
-        <p>
-          [1] You may observe that the requests are scattered all over the file.
-          In practice, we do not fetch all these blocks at once. The file is
-          coordinate sorted, so we fetch lower-byte ranges first and abort once
-          we encounter an alignment beyond the requested range (see SAMv1.pdf
-          Sec 5.1.1). The de-duplicate option uses the linear index to exclude
-          bins before the query range.
-        </p>
-        <p>
-          [2] In genome browsers, we sometimes avoid merging too many BAI blocks
-          into a single large block, because unzipping would require a very
-          large memory buffer without streaming decompression.
-        </p>
-      </div>
     </div>
   )
 }

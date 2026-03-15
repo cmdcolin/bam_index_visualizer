@@ -88,6 +88,17 @@ function createProgram(
 
 const ROW_SIZES = [1, 8, 64, 512, 4096, 32_768]
 
+function clampZoom(
+  scale: number,
+  offset: number,
+  width: number,
+): [number, number] {
+  const clampedScale = Math.max(1, scale)
+  const maxOffset = (clampedScale - 1) * width
+  const clampedOffset = Math.max(0, Math.min(maxOffset, offset))
+  return [clampedScale, clampedOffset]
+}
+
 interface UniformLocations {
   resolution: WebGLUniformLocation | null
   scale: WebGLUniformLocation | null
@@ -506,7 +517,14 @@ export default function Graph({
         return
       }
       const deltaX = event.clientX - dragStartRef.current.x
-      offsetRef.current = dragStartRef.current.offset - deltaX
+      const canvas = canvasRef.current
+      const width = canvas ? canvas.getBoundingClientRect().width : widthRef.current
+      const [, co] = clampZoom(
+        scaleRef.current,
+        dragStartRef.current.offset - deltaX,
+        width,
+      )
+      offsetRef.current = co
       scheduleRender()
     }
 
@@ -541,11 +559,17 @@ export default function Graph({
         const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1
         const newScale = scaleRef.current * zoomFactor
         const newOffset = (offsetRef.current + mouseX) * zoomFactor - mouseX
-        scaleRef.current = newScale
-        offsetRef.current = newOffset
+        const [cs, co] = clampZoom(newScale, newOffset, canvasWidth)
+        scaleRef.current = cs
+        offsetRef.current = co
         widthRef.current = canvasWidth
       } else {
-        offsetRef.current = offsetRef.current + event.deltaX
+        const [, co] = clampZoom(
+          scaleRef.current,
+          offsetRef.current + event.deltaX,
+          canvasWidth,
+        )
+        offsetRef.current = co
       }
 
       scheduleRender()
@@ -619,13 +643,15 @@ export default function Graph({
           if (!canvas) {
             return
           }
+          const { width } = canvas.getBoundingClientRect()
           const oldScale = scaleRef.current
           const newScale = oldScale / 1.5
-          const w2 = canvas.getBoundingClientRect().width / 2
+          const w2 = width / 2
           const newOffset = ((offsetRef.current + w2) * newScale) / oldScale - w2
+          const [cs, co] = clampZoom(newScale, newOffset, width)
 
-          scaleRef.current = newScale
-          offsetRef.current = newOffset
+          scaleRef.current = cs
+          offsetRef.current = co
 
           scheduleRender()
           debouncedSetCurrPos()
@@ -633,6 +659,7 @@ export default function Graph({
       >
         Zoom out
       </button>
+      <span style={{ marginLeft: 8, color: '#666', fontSize: 13 }}>scroll to zoom</span>
       <div style={{ textAlign: 'center' }}>
         {fmt2(2 ** 29 / displayState.scale)} ({fmt2((displayState.offset / displayState.width) * c)} -{' '}
         {fmt2(((displayState.offset + displayState.width) / displayState.width) * c)})
@@ -652,14 +679,14 @@ export default function Graph({
         ) : null}
         <div
           className="rubberband"
-          style={{ height: 10, width: '90%' }}
+          style={{ height: 10, width: '100%' }}
           onMouseDown={event => {
             setMouseDown(event.clientX)
             setMouseCurrent(event.clientX)
           }}
         />
         <div className="graph-label">Bin Index</div>
-        <div style={{ position: 'relative', width: '90%', height: 200 }}>
+        <div style={{ position: 'relative', width: '100%', height: 200 }}>
           <canvas
             ref={canvasRef}
             style={{
@@ -690,7 +717,7 @@ export default function Graph({
             {linearDeltas.length.toLocaleString()} entries
           </span>
         </div>
-        <div style={{ position: 'relative', width: '90%', height: 100 }}>
+        <div style={{ position: 'relative', width: '100%', height: 100 }}>
           <canvas
             ref={linearCanvasRef}
             style={{

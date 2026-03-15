@@ -151,69 +151,63 @@ function App() {
   return (
     <div className="App">
       <div>
-        <h2>BAM index visualizer</h2>
-        <button onClick={openHelp}>Help</button>
-        <p>
-          This is a project that helps visualize the structure of the bin index
-          of BAM index (BAI) files.
-        </p>
+        <div className="app-header">
+          <h1>BAM index visualizer</h1>
+          <button onClick={openHelp}>Help</button>
+        </div>
         <dialog ref={helpDialogRef} onClick={handleDialogClick}>
           <h3>What is a BAI file?</h3>
           <p>
-            The BAI (BAM index) allows users to download only the data that is
-            needed for a particular query e.g. chr1:1-100 from a BAM file. The
-            BAI is significantly smaller than a BAM and is read into memory. It
-            contains bins, which themselves contain one of more "start and end"
-            pointers to where in the BAM file to look for the reads for your
-            query. This program will show you what this bin structure looks like
-            in a given BAI file.
+            The BAI (BAM index) lets clients fetch only the data needed for a
+            query (e.g. chr1:1-100) without downloading the whole BAM. It stores
+            bins, each containing byte-range pointers into the BAM.
           </p>
           <h3>How does this work?</h3>
+          <h4>Bin Index</h4>
           <p>
-            The top diagram shows the distribution of data in the bins from the
-            binning index for a particular chromosome. The binning index has 6
-            levels of bins, and each level can address 536Mbp of genomic
-            coordinates (this is the maximum size of a single chromosome that
-            BAI can index). We use the "reg2bin" function (see SAMv1.pdf) to map
-            a given coordinate region query (reg) to a set of bins to look in.
-            The bins then tell us where to look in the BAM file.
+            6 levels of bins cover up to 536Mbp. The "reg2bin" function (SAMv1.pdf)
+            maps a query region to the relevant bins. Reads that cross bin
+            boundaries are placed in a larger bin, so all levels overlap the same
+            genomic space. Deduplication reduces the number of actual fetch
+            requests.
           </p>
+          <h4>Linear Index Coverage</h4>
           <p>
-            The different bin levels are needed when e.g. a read crosses a
-            boundary between two bins, in this case, it's placed into a larger
-            bin. Longer reads can trigger this, but short reads can too when
-            they just happen to cross a boundary. The bins from the different
-            levels overlap (you can visually see this, all 6 levels cover the
-            same genomic space) but we can deduplicate the bins to make a
-            smaller number of read requests from the file.
+            Virtual file offsets stored every 16kb. Differencing consecutive
+            offsets estimates data density per window, the same technique used
+            by{' '}
+            <a
+              href="https://github.com/brentp/indexcov"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              indexcov
+            </a>
+            .
           </p>
+          <h4>Request pattern</h4>
           <p>
-            The bottom diagram shows the exact byte range requests made to the
-            file for the currently viewed region in the top diagram.
-          </p>
-          <h4>The bin index visualization</h4>
-          <p>
-            The first chart shows the 536Mbp overview. This is because the bins
-            for the BAI cannot address chromosomes larger than 536Mbp (2^29-1),
-            and so this graph shows this "total overview". Bins are colored by
-            how much data are in them scaled against the largest bin. You can
-            click and drag the grey bar above the view to "zoom in" or side
-            scroll the canvas.
-          </p>
-          <h4>The request pattern</h4>
-          <p>
-            The second chart shows an overview of the byte ranges that would be
-            requested from the BAM, and it is responsive to zooming in and out
-            on the first chart.
+            Byte-range requests for the currently viewed region. Updates as you
+            zoom the bin index.
           </p>
           <h4>Block overview</h4>
           <p>
-            The third section lists which bins are being requested. Click the
-            button to fetch data from the BAM file, which demonstrates
-            short-circuiting: the program stops once it finds a read beyond the
-            requested coordinate range.
+            Lists the bins being requested. Fetch from the BAM to see
+            short-circuiting in action: fetching stops once a read beyond the
+            query range is found (SAMv1.pdf Sec 5.1.1).
           </p>
-          <button onClick={closeHelp}>Close</button>
+          <h4>Notes</h4>
+          <p>
+            Index block sizes shown may exceed actual bytes downloaded because
+            fetching aborts early. The de-duplicate option uses the linear index
+            to exclude bins before the query range. Genome browsers sometimes
+            avoid merging too many blocks to keep memory use bounded during
+            decompression.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+            <a href="https://github.com/cmdcolin/bam_index_visualizer" target="_blank" rel="noopener noreferrer">Source code</a>
+            <button onClick={closeHelp}>Close</button>
+          </div>
         </dialog>
         <div className="form">
           <fieldset>
@@ -337,7 +331,6 @@ function App() {
           )}
         </div>
       )}
-      <a href="https://github.com/cmdcolin/bam_index_visualizer">Github</a>
     </div>
   )
 }

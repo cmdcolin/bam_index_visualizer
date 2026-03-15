@@ -9,13 +9,13 @@
 }
 
 body {
-  margin: var(--space-md);
+  margin: 72px;
   font-family: system-ui, sans-serif;
   color: var(--text);
   line-height: 1.5;
 }
 
-h2, h3 {
+h1, h2, h3 {
   margin: var(--space-md) 0 var(--space-sm);
   font-weight: 600;
 }
@@ -31,6 +31,18 @@ label {
 
 button {
   cursor: pointer;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
 }
 
 canvas {
@@ -52,6 +64,8 @@ a {
 
 .form fieldset {
   padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: 4px;
 }
 
 .radio-group {
@@ -138,6 +152,7 @@ a {
 /* Main visualization panel */
 .visualization-panel {
   border: 1px solid var(--border);
+  border-radius: 4px;
   padding: var(--space-md);
   margin: var(--space-md) 0;
 }
@@ -176,23 +191,6 @@ a {
   margin-bottom: var(--space-sm);
 }
 
-.file-layout-region {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.region-label {
-  color: var(--text-muted);
-}
-
-.region-value {
-  font-family: monospace;
-  font-weight: 600;
-  background: var(--bg-subtle);
-  padding: 2px 8px;
-  border-radius: 3px;
-}
 
 .file-layout-subtitle {
   font-size: 0.85em;
@@ -238,32 +236,15 @@ a {
   padding-right: var(--space-sm);
 }
 
-/* Collapsible sections */
-details {
-  margin: var(--space-md) 0;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-subtle);
-  border-radius: 3px;
-}
-
-details summary {
-  cursor: pointer;
-  font-weight: 500;
-}
-
-details p {
-  max-width: none;
-  color: var(--text-muted);
-}
-
 /* Dialog */
 dialog {
-  max-width: 600px;
+  width: min(800px, 90vw);
   max-height: 80vh;
   overflow-y: auto;
-  padding: var(--space-md);
+  padding: var(--space-md) calc(var(--space-md) * 1.5);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 
 dialog::backdrop {
@@ -272,6 +253,10 @@ dialog::backdrop {
 
 dialog h3 {
   margin-top: 0;
+}
+
+dialog h4 {
+  margin: var(--space-md) 0 var(--space-sm);
 }
 
 dialog p {
