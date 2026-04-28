@@ -25,7 +25,7 @@ export default tseslint.config(
 
     settings: {
       react: {
-        version: 'detect',
+        version: 'v19.2.5',
       },
     },
   },

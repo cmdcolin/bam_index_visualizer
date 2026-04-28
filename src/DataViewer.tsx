@@ -56,9 +56,10 @@ export default function DataViewer({ data }: { data: BamData }) {
         {baiForChr ? (
           <Graph bai={baiForChr} maxVal={maxVal} setCurrPos={setCurrPos} />
         ) : null}
-        {currPos ? <FileLayout data={data} chr={chr} currPos={currPos} /> : null}
+        {currPos ? (
+          <FileLayout data={data} chr={chr} currPos={currPos} />
+        ) : null}
       </div>
-
     </div>
   )
 }

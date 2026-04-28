@@ -208,7 +208,6 @@ export default function FileLayout({
       </div>
       <TotalsPerBin totalPerBin={totalPerBin} />
       <Chunks chunks={chunks} context={data} currPos={currPos} />
-
     </div>
   )
 }

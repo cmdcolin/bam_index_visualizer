@@ -126,7 +126,7 @@ function f(n: number, fixed = 0) {
 
 export function fmt2(n: number, fixed = 1, showUnit = true) {
   n = Math.min(Math.max(0, n), 2 ** 29 - 1)
-  let unit = ''
+  let unit: string
   let val: string
   if (n > 1000 * 1000 * 1000) {
     val = f(n / (1000 * 1000 * 1000), fixed)

@@ -15,7 +15,9 @@ body {
   line-height: 1.5;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   margin: var(--space-md) 0 var(--space-sm);
   font-weight: 600;
 }
@@ -191,7 +193,6 @@ a {
   margin-bottom: var(--space-sm);
 }
 
-
 .file-layout-subtitle {
   font-size: 0.85em;
   color: var(--text-muted);
@@ -244,7 +245,7 @@ dialog {
   padding: var(--space-md) calc(var(--space-md) * 1.5);
   border: 1px solid var(--border);
   border-radius: 6px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
 dialog::backdrop {

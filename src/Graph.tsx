@@ -138,7 +138,11 @@ export default function Graph({
   const widthRef = useRef(0)
 
   // State for display only (updated less frequently)
-  const [displayState, setDisplayState] = useState({ scale: 1, offset: 0, width: 0 })
+  const [displayState, setDisplayState] = useState({
+    scale: 1,
+    offset: 0,
+    width: 0,
+  })
 
   const sizes = useMemo(() => {
     const result: Record<string, number> = {}
@@ -185,7 +189,8 @@ export default function Graph({
       return
     }
 
-    const { width: cssWidth, height: cssHeight } = canvas.getBoundingClientRect()
+    const { width: cssWidth, height: cssHeight } =
+      canvas.getBoundingClientRect()
     if (canvas.width !== cssWidth || canvas.height !== cssHeight) {
       canvas.width = cssWidth
       canvas.height = cssHeight
@@ -244,13 +249,16 @@ export default function Graph({
     // The linear index covers 2^29 bp with entries every 16kb (2^14)
     // So there are up to 2^15 = 32768 entries - use this fixed value to match
     // the bin index coordinate system (bottom row has 32767 bins at same resolution)
-    const MAX_LINEAR_ENTRIES = 32768
+    const MAX_LINEAR_ENTRIES = 32_768
     const scaledWidth = width * scale
     const barWidth = scaledWidth / MAX_LINEAR_ENTRIES
     const viewStart = offset / scaledWidth
     const viewEnd = (offset + width) / scaledWidth
     const startIdx = Math.max(0, Math.floor(viewStart * MAX_LINEAR_ENTRIES))
-    const endIdx = Math.min(linearDeltas.length, Math.ceil(viewEnd * MAX_LINEAR_ENTRIES))
+    const endIdx = Math.min(
+      linearDeltas.length,
+      Math.ceil(viewEnd * MAX_LINEAR_ENTRIES),
+    )
 
     ctx.fillStyle = 'hsl(200, 70%, 50%)'
 
@@ -382,22 +390,30 @@ export default function Graph({
           const value = binSize ?? -1
 
           vertices.push(
-            x, y, value,
-            x + w, y, value,
-            x, y + h, value,
-            x, y + h, value,
-            x + w, y, value,
-            x + w, y + h, value,
+            x,
+            y,
+            value,
+            x + w,
+            y,
+            value,
+            x,
+            y + h,
+            value,
+            x,
+            y + h,
+            value,
+            x + w,
+            y,
+            value,
+            x + w,
+            y + h,
+            value,
           )
         }
       }
 
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-      gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(vertices),
-        gl.STATIC_DRAW,
-      )
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
       vertexCountRef.current = vertices.length / 3
     },
     [sizes],
@@ -484,7 +500,8 @@ export default function Graph({
         const minX = Math.min(mouseDown, event.clientX) - left
         const selW = Math.abs(mouseDown - event.clientX)
         const newScale = scaleRef.current * (width / selW)
-        const newOffset = (offsetRef.current + minX) * (newScale / scaleRef.current)
+        const newOffset =
+          (offsetRef.current + minX) * (newScale / scaleRef.current)
 
         scaleRef.current = newScale
         offsetRef.current = newOffset
@@ -518,7 +535,9 @@ export default function Graph({
       }
       const deltaX = event.clientX - dragStartRef.current.x
       const canvas = canvasRef.current
-      const width = canvas ? canvas.getBoundingClientRect().width : widthRef.current
+      const width = canvas
+        ? canvas.getBoundingClientRect().width
+        : widthRef.current
       const [, co] = clampZoom(
         scaleRef.current,
         dragStartRef.current.offset - deltaX,
@@ -626,7 +645,8 @@ export default function Graph({
           const oldScale = scaleRef.current
           const newScale = oldScale * 1.5
           const w2 = canvas.getBoundingClientRect().width / 2
-          const newOffset = ((offsetRef.current + w2) * newScale) / oldScale - w2
+          const newOffset =
+            ((offsetRef.current + w2) * newScale) / oldScale - w2
 
           scaleRef.current = newScale
           offsetRef.current = newOffset
@@ -647,7 +667,8 @@ export default function Graph({
           const oldScale = scaleRef.current
           const newScale = oldScale / 1.5
           const w2 = width / 2
-          const newOffset = ((offsetRef.current + w2) * newScale) / oldScale - w2
+          const newOffset =
+            ((offsetRef.current + w2) * newScale) / oldScale - w2
           const [cs, co] = clampZoom(newScale, newOffset, width)
 
           scaleRef.current = cs
@@ -659,10 +680,16 @@ export default function Graph({
       >
         Zoom out
       </button>
-      <span style={{ marginLeft: 8, color: '#666', fontSize: 13 }}>scroll to zoom</span>
+      <span style={{ marginLeft: 8, color: '#666', fontSize: 13 }}>
+        scroll to zoom
+      </span>
       <div style={{ textAlign: 'center' }}>
-        {fmt2(2 ** 29 / displayState.scale)} ({fmt2((displayState.offset / displayState.width) * c)} -{' '}
-        {fmt2(((displayState.offset + displayState.width) / displayState.width) * c)})
+        {fmt2(2 ** 29 / displayState.scale)} (
+        {fmt2((displayState.offset / displayState.width) * c)} -{' '}
+        {fmt2(
+          ((displayState.offset + displayState.width) / displayState.width) * c,
+        )}
+        )
       </div>
       <div style={{ position: 'relative' }}>
         {mouseCurrent && mouseDown ? (

@@ -165,11 +165,11 @@ function App() {
           <h3>How does this work?</h3>
           <h4>Bin Index</h4>
           <p>
-            6 levels of bins cover up to 536Mbp. The "reg2bin" function (SAMv1.pdf)
-            maps a query region to the relevant bins. Reads that cross bin
-            boundaries are placed in a larger bin, so all levels overlap the same
-            genomic space. Deduplication reduces the number of actual fetch
-            requests.
+            6 levels of bins cover up to 536Mbp. The "reg2bin" function
+            (SAMv1.pdf) maps a query region to the relevant bins. Reads that
+            cross bin boundaries are placed in a larger bin, so all levels
+            overlap the same genomic space. Deduplication reduces the number of
+            actual fetch requests.
           </p>
           <h4>Linear Index Coverage</h4>
           <p>
@@ -204,8 +204,21 @@ function App() {
             avoid merging too many blocks to keep memory use bounded during
             decompression.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-            <a href="https://github.com/cmdcolin/bam_index_visualizer" target="_blank" rel="noopener noreferrer">Source code</a>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginTop: 16,
+            }}
+          >
+            <a
+              href="https://github.com/cmdcolin/bam_index_visualizer"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Source code
+            </a>
             <button onClick={closeHelp}>Close</button>
           </div>
         </dialog>

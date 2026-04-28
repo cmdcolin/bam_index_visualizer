@@ -107,8 +107,8 @@ export function Chunks({
                       : '#a003',
               }}
             >
-              bin number: {c.chunk.bin} - file offsets {c.fmt1} - {c.fmt2} (fetched
-              size {c.fmt3}){' '}
+              bin number: {c.chunk.bin} - file offsets {c.fmt1} - {c.fmt2}{' '}
+              (fetched size {c.fmt3}){' '}
               {totalFetched === 0
                 ? ''
                 : idx < stoppingPoint
