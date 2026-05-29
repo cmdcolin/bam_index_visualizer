@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
-import type Chunk from './chunk'
-import { fmt } from './util'
+import { fmt, type Chunk } from './util'
 import type { BamFile } from '@gmod/bam'
 
 export function Chunks({
@@ -49,16 +48,7 @@ export function Chunks({
             let totalFetched = 0
             for (const chunk of chunks) {
               setCurrChunk(i++)
-              const { data, cpositions, dpositions } = await bam._readChunk({
-                chunk,
-                opts: {},
-              })
-              const records = await bam.readBamFeatures(
-                data,
-                cpositions,
-                dpositions,
-                chunk,
-              )
+              const records = await bam._readChunkFeatures(chunk, {})
               totalFetched += chunk.fetchedSize()
 
               let done = false

@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react'
-import { max, sum, fmt, fmt2 } from './util'
-import type { BAI } from '@gmod/bam'
+import { max, sum, fmt, fmt2, type RefIndex } from './util'
 
 const VERTEX_SHADER = `
   attribute vec2 a_position;
@@ -111,7 +110,7 @@ export default function Graph({
   maxVal,
   setCurrPos,
 }: {
-  bai: NonNullable<ReturnType<Awaited<ReturnType<BAI['parse']>>['indices']>>
+  bai: RefIndex
   maxVal: string
   setCurrPos: (arg: [number, number]) => void
 }) {

@@ -37,9 +37,11 @@ export default function FileLayout({
   const containerRef = useRef<HTMLDivElement>(null)
   const [optimize, setOptimize] = useState(true)
   const [canvasWidth, setCanvasWidth] = useState(0)
+  const ba = useMemo(() => {
+    const idx = data.chrToIndex[chr]
+    return idx === undefined ? undefined : data.bai.indices(idx)
+  }, [data, chr])
   const { minVal, maxVal } = useMemo(() => {
-    const { bai, chrToIndex } = data
-    const ba = bai.indices(chrToIndex[chr]!)
     if (!ba) {
       return { minVal: 0, maxVal: 0 }
     }
@@ -47,17 +49,13 @@ export default function FileLayout({
     const maxVal = max(bins.map(c => c.maxv.blockPosition))
     const minVal = min(bins.map(c => c.minv.blockPosition))
     return { minVal, maxVal }
-  }, [data, chr])
+  }, [ba])
   const [sp, ep] = currPos
 
-  const chunks = useMemo(() => {
-    const { bai, chrToIndex } = data
-    const ba = bai.indices(chrToIndex[chr]!)
-    if (!ba) {
-      return []
-    }
-    return getChunks(sp, ep, ba, optimize)
-  }, [data, sp, ep, chr, optimize])
+  const chunks = useMemo(
+    () => (ba ? getChunks(sp, ep, ba, optimize) : []),
+    [ba, sp, ep, optimize],
+  )
 
   const { total, totalPerBin } = useMemo(() => {
     let total = 0
@@ -94,15 +92,10 @@ export default function FileLayout({
       return
     }
     const ctx = canvas.getContext('2d')
-    if (!ctx) {
+    if (!ctx || !ba) {
       return
     }
 
-    const { bai, chrToIndex } = data
-    const ba = bai.indices(chrToIndex[chr]!)
-    if (!ba) {
-      return
-    }
     const width = canvas.getBoundingClientRect().width
     const height = canvas.getBoundingClientRect().height
     canvas.width = width
@@ -144,7 +137,7 @@ export default function FileLayout({
       ctx.fillStyle = colors[level]!
       ctx.fillRect(x1 * width, h * level, Math.max((x2 - x1) * width, 2), h)
     }
-  }, [data, chr, minVal, maxVal, chunks, canvasWidth])
+  }, [ba, minVal, maxVal, chunks, canvasWidth])
 
   useEffect(() => {
     const canvas = ref.current

@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
-import type Chunk from './chunk'
-import type VirtualOffset from './virtualOffset'
 import type { BAI, BamFile } from '@gmod/bam'
+
+export type BaiParsed = Awaited<ReturnType<BAI['parse']>>
+export type RefIndex = NonNullable<ReturnType<BaiParsed['indices']>>
+export type Chunk = RefIndex['binIndex'][number][number]
+export type VirtualOffset = RefIndex['linearIndex'][number]
 
 export function sum(arr: number[]) {
   let sum = 0
@@ -31,22 +33,6 @@ export function min(arr: number[]) {
   return min
 }
 
-export function avg(arr: number[]) {
-  return sum(arr) / arr.length
-}
-
-export function median(arr: number[]) {
-  if (arr.length === 0) {
-    return 0
-  }
-  arr.sort((a, b) => a - b)
-  const midpoint = Math.floor(arr.length / 2)
-  if (arr.length % 2 === 1) {
-    return arr[midpoint] ?? 0
-  }
-  return ((arr[midpoint - 1] ?? 0) + (arr[midpoint] ?? 0)) / 2
-}
-
 export function reg2bins(beg: number, end: number): [number, number][] {
   end -= 1
   return [
@@ -70,7 +56,7 @@ export function optimizeChunks(
   chunks: Chunk[],
   lowest: VirtualOffset | null,
   dedupe: boolean,
-) {
+): Chunk[] {
   const mergedChunks: Chunk[] = []
   let lastChunk: Chunk | null = null
 
@@ -148,9 +134,9 @@ export function fmt2(n: number, fixed = 1, showUnit = true) {
 export function getChunks(
   s: number,
   e: number,
-  ba: { linearIndex: VirtualOffset[]; binIndex: Record<string, Chunk[]> },
+  ba: RefIndex,
   optimize: boolean,
-) {
+): Chunk[] {
   const chunks = [] as Chunk[]
   const bins = reg2bins(s, e)
   for (const [start, end] of bins) {
@@ -182,25 +168,9 @@ export function getChunks(
 
 export const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 
-export function useDebounce(value: unknown, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value)
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
-
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
-
-  return debouncedValue
-}
-
 export interface BamData {
   bam: BamFile
-  bai: Awaited<ReturnType<BAI['parse']>>
+  bai: BaiParsed
   indexToChr: {
     refName: string
     length: number

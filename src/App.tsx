@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { BlobFile } from 'generic-filehandle2'
-import { BamFile } from '@gmod/bam'
+import { BamFile, BAI } from '@gmod/bam'
 import DataViewer from './DataViewer'
 import type { BamData } from './util'
 
@@ -33,9 +33,10 @@ const exampleFiles = [
 
 async function fetchWithProgress(
   url: string,
+  signal: AbortSignal,
   onProgress: (loaded: number, total: number | null) => void,
 ) {
-  const response = await fetch(url)
+  const response = await fetch(url, { signal })
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: ${response.status}`)
   }
@@ -103,6 +104,8 @@ function App() {
   )
 
   useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     ;(async () => {
       try {
@@ -121,31 +124,39 @@ function App() {
             return
           }
         } else {
-          const baiData = await fetchWithProgress(baiUrl, (loaded, total) => {
-            setDownloadProgress({ loaded, total })
-          })
+          const baiData = await fetchWithProgress(
+            baiUrl,
+            signal,
+            (loaded, total) => {
+              setDownloadProgress({ loaded, total })
+            },
+          )
           bam = new BamFile({
             bamUrl,
             baiFilehandle: new BlobFile(new Blob([baiData])),
           })
         }
-        setDownloadProgress(null)
         const header = await bam.getHeader()
-        const indexToChr = bam.indexToChr
-        const chrToIndex = bam.chrToIndex
+        const { index, indexToChr, chrToIndex } = bam
 
-        if (bam.index && indexToChr && chrToIndex && header) {
-          const bai = await bam.index.parse()
-          if ('bai' in bai && bai.bai) {
+        if (index instanceof BAI && indexToChr && chrToIndex && header) {
+          const bai = await index.parse()
+          if (!signal.aborted) {
             setData({ bam, indexToChr, chrToIndex, bai, header })
+            setDownloadProgress(null)
           }
         }
       } catch (error_) {
-        setError(error_)
-        setDownloadProgress(null)
-        console.error(error_)
+        if (!signal.aborted) {
+          setError(error_)
+          setDownloadProgress(null)
+          console.error(error_)
+        }
       }
     })()
+    return () => {
+      controller.abort()
+    }
   }, [bamUrl, baiUrl, useLocal, localBamFile, localBaiFile])
 
   return (
