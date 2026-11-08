@@ -11,6 +11,9 @@ importers:
       '@gmod/bam':
         specifier: ^7.2.4
         version: 7.2.4
+      '@gmod/bgzf-filehandle':
+        specifier: ^6.0.27
+        version: 6.0.27
       generic-filehandle2:
         specifier: ^2.1.10
         version: 2.1.10

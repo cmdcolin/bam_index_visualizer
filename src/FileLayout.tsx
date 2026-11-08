@@ -1,7 +1,16 @@
 import { useRef, useEffect, useMemo, useState } from 'react'
+import ChunkInspector from './ChunkInspector'
 import { Chunks } from './Chunks'
 import { TotalsPerBin } from './TotalsPerBin'
-import { type BamData, colors, fmt, getChunks, max, min } from './util'
+import {
+  type BamData,
+  type Chunk,
+  colors,
+  fmt,
+  getChunks,
+  max,
+  min,
+} from './util'
 
 function getLevel(b: number) {
   if (b === 0) {
@@ -36,6 +45,7 @@ export default function FileLayout({
   const ref2 = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [optimize, setOptimize] = useState(true)
+  const [inspected, setInspected] = useState<Chunk>()
   const [canvasWidth, setCanvasWidth] = useState(0)
   const ba = useMemo(() => {
     const idx = data.chrToIndex[chr]
@@ -200,7 +210,24 @@ export default function FileLayout({
         </div>
       </div>
       <TotalsPerBin totalPerBin={totalPerBin} />
-      <Chunks chunks={chunks} context={data} currPos={currPos} />
+      <Chunks
+        chunks={chunks}
+        context={data}
+        currPos={currPos}
+        onInspect={setInspected}
+      />
+      {inspected ? (
+        <ChunkInspector
+          key={inspected.toString()}
+          data={data}
+          chunk={inspected}
+          refId={data.chrToIndex[chr] ?? -1}
+          currPos={currPos}
+          onClose={() => {
+            setInspected(undefined)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

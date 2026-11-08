@@ -6,10 +6,12 @@ export function Chunks({
   context,
   chunks,
   currPos,
+  onInspect,
 }: {
   context: { bam: BamFile }
   chunks: Chunk[]
   currPos: [number, number]
+  onInspect: (chunk: Chunk) => void
 }) {
   const [sp, ep] = currPos
   const cacheKey = `${chunks.length}-${sp}-${ep}`
@@ -97,6 +99,20 @@ export function Chunks({
                       : '#a003',
               }}
             >
+              <button
+                onClick={() => {
+                  if (
+                    c.chunk.fetchedSize() < 10_000_000 ||
+                    globalThis.confirm(
+                      `This chunk is ${c.fmt3}, which will be downloaded and inflated in the browser. Continue?`,
+                    )
+                  ) {
+                    onInspect(c.chunk)
+                  }
+                }}
+              >
+                Inspect
+              </button>{' '}
               bin number: {c.chunk.bin} - file offsets {c.fmt1} - {c.fmt2}{' '}
               (fetched size {c.fmt3}){' '}
               {totalFetched === 0
